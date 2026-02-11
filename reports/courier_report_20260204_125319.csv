@@ -1,0 +1,2 @@
+"Courier ID","Sender ID","Sender Name","Sender Email","Receiver ID","Receiver Name","Receiver Email","From Location","To Location","Courier Type",Status,"Delivery Date","Created By","Agent ID","Agent Branch","Created At","Updated At"
+3,1,"Khan G",kaleem@gmail.com,1,"Khan G",kaleem@gmail.com,Islamabad,Karachi,Parcel,booked,2026-02-05,1,,,"2026-02-04 16:53:04","2026-02-04 16:53:04"
