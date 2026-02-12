@@ -16,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
     $branch   = trim($_POST['branch'] ?? '');
 
-    // Validation
     if (!$name || !$email || !$password || !$branch) {
         $error = 'All fields are required.';
     } elseif (!preg_match("/^[A-Z][a-zA-Z ]*$/", $name)) {
@@ -26,8 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!preg_match("/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/", $password)) {
         $error = 'Password must be at least 6 characters and include letters and numbers.';
     } else {
-
-        // Check if email already exists
         $check = $conn->prepare("SELECT user_id FROM users WHERE email=? LIMIT 1");
         $check->bind_param("s", $email);
         $check->execute();
@@ -36,33 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($check->num_rows > 0) {
             $error = "Email already exists. Please use another email.";
         } else {
-
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-            // Insert into users table
             $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'agent')");
             $stmt->bind_param("sss", $name, $email, $hashedPassword);
 
             if ($stmt->execute()) {
-
                 $user_id = $conn->insert_id;
-
-                // Insert into agents table
                 $stmt2 = $conn->prepare("INSERT INTO agents (user_id, branch) VALUES (?, ?)");
                 $stmt2->bind_param("is", $user_id, $branch);
 
                 if ($stmt2->execute()) {
-
-                    // Send email
                     $subject = "Your Agent Account Created";
-                    $body = "Hello $name,<br>Your agent account has been created.<br>Email: $email<br>Password: $password";
+                    $body = "Hello $name,\nYour agent account has been created.\nEmail: $email\nPassword: $password";
                     send_mail($email, $subject, $body);
-
                     $success = "Agent created successfully.";
                 } else {
                     $error = "Failed to create agent branch.";
                 }
-
             } else {
                 $error = "Failed to create user.";
             }
@@ -78,15 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create Agent - Admin Panel</title>
 <style>
-/* --- RESET & GLOBAL --- */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html, body{height:100%; width:100%;}
+html, body{height:100%; width:100%; overflow:auto; scroll-behavior:smooth; scrollbar-width:none; -ms-overflow-style:none;}
+body::-webkit-scrollbar{display:none;}
 
 /* --- BACKGROUND IMAGE WITH DARK OVERLAY --- */
 body {
     background: url('../assets/agent.jpg') center/cover no-repeat fixed;
     position: relative;
-    padding-bottom: 150px; /* space after form */
+    padding-bottom: 150px; /* extra space after form */
 }
 body::after {
     content: '';
@@ -130,7 +117,7 @@ body::after {
 .container{
     width:90%;
     max-width:600px;
-    margin:60px auto 80px auto; /* spacing above & below form */
+    margin:50px auto 80px auto; /* space after navbar and below */
     background: rgba(255,255,255,0.15);
     backdrop-filter: blur(15px);
     border-radius:20px;
@@ -157,37 +144,6 @@ input, button{
 }
 input:focus, select:focus{
     box-shadow:0 0 10px rgba(255,126,95,0.6);
-}
-
-/* --- SELECT DROPDOWNS --- */
-.select-wrapper{
-    position: relative;
-    width: 100%;
-    margin-bottom: 15px;
-}
-.select-wrapper select{
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    width: 100%;
-    padding: 14px;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-    background: rgba(255,255,255,0.95);
-    color: #000;
-    font-size: 1rem;
-    cursor: pointer;
-}
-.select-wrapper::after{
-    content:"▼";
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color:#333;
-    font-size:0.8rem;
 }
 
 /* --- BUTTON --- */
@@ -227,7 +183,7 @@ p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
 
 /* --- RESPONSIVE --- */
 @media(max-width:600px){
-    .container{ padding:20px; margin-top:80px; }
+    .container{ padding:20px; margin:30px auto 60px auto; }
     input, select, button{ font-size:0.9rem; padding:10px; }
 }
 </style>
@@ -265,6 +221,9 @@ p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
     </form>
 </div>
 
+<!-- Extra space after form -->
+<div style="height: 150px;"></div>
+
 <script>
 // Real-time validation
 const form = document.getElementById('agentForm');
@@ -293,7 +252,7 @@ passwordInput.addEventListener('input', () => {
 });
 
 branchInput.addEventListener('input', () => {
-    const regex = /^.+$/; // non-empty
+    const regex = /^.+$/;
     document.getElementById('branchMessage').textContent = regex.test(branchInput.value) ? 'Looks good!' : 'Branch cannot be empty';
     document.getElementById('branchMessage').className = regex.test(branchInput.value) ? 'message valid' : 'message invalid';
 });

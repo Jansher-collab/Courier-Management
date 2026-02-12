@@ -55,10 +55,10 @@ if(!empty($selected_courier_id)){
 
 // Send email if form submitted
 if(isset($_POST['send_email'])){
-    $courier_id = $_POST['courier_id'] ?? null; // fix undefined key
+    $courier_id = $_POST['courier_id'] ?? null;
     $to = $_POST['to_email'];
     $subject = $_POST['subject'];
-    $body = $_POST['message'];
+    $body = strip_tags($_POST['message']); // remove HTML tags for plain text email
 
     if(send_mail($to, $subject, $body)){
         $message_sent = "Email sent successfully to $to";
@@ -87,7 +87,7 @@ if(isset($_POST['send_email'])){
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
 
-/* HIDE SCROLLBAR BUT ALLOW SCROLL */
+/* HIDE SCROLLBAR */
 html, body { height:100%; overflow:hidden; }
 .scroll-wrapper { height:100vh; overflow:auto; -ms-overflow-style:none; scrollbar-width:none; }
 .scroll-wrapper::-webkit-scrollbar { display:none; }
@@ -103,10 +103,7 @@ body::after {
 }
 
 /* NAVBAR */
-.navbar {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:15px 30px; margin-bottom:30px;
-}
+.navbar { display:flex; justify-content:space-between; align-items:center; padding:15px 30px; margin-bottom:30px; }
 .logo {
     font-size:1.5rem; font-weight:bold;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
@@ -163,12 +160,10 @@ textarea { resize:none; }
     max-height:200px; overflow-y:auto;
 }
 .select-items div {
-    padding:10px; cursor:pointer;
-    border-bottom:1px solid #eee;
+    padding:10px; cursor:pointer; border-bottom:1px solid #eee;
 }
 .select-items div:hover {
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    color:white;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white;
 }
 
 /* BUTTON */
@@ -210,8 +205,11 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
         <div class="select-items">
             <?php if(!empty($couriers)): ?>
                 <?php foreach($couriers as $row): ?>
-                <div data-value="<?= $row['courier_id'] ?>" data-email="<?= htmlspecialchars($row['receiver_email']) ?>">
-                    <?= "Courier ID: {$row['courier_id']} - " . htmlspecialchars($row['receiver_name']) ?>
+                <div 
+                    data-value="<?= $row['courier_id'] ?>" 
+                    data-email="<?= htmlspecialchars($row['receiver_email']) ?>"
+                >
+                    <?= "ID: {$row['courier_id']} | Name: " . htmlspecialchars($row['receiver_name']) . " | Email: " . htmlspecialchars($row['receiver_email']) ?>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -219,7 +217,6 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
             <?php endif; ?>
         </div>
         <input type="hidden" name="courier_id" value="<?= htmlspecialchars($selected_courier_id) ?>">
-        <input type="hidden" name="to_email" value="<?= htmlspecialchars($to_email) ?>">
     </div>
 
     <label>To (Email):</label>
@@ -238,7 +235,7 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
 </div>
 
 <script>
-// Custom dropdown functionality
+// Dropdown functionality
 const selected = document.querySelector('.select-selected');
 const items = document.querySelector('.select-items');
 const courierInput = document.querySelector('input[name="courier_id"]');
@@ -246,19 +243,26 @@ const emailInput = document.querySelector('input[name="to_email"]');
 
 selected.addEventListener('click', () => {
     items.style.display = items.style.display === 'block' ? 'none' : 'block';
-    selected.classList.toggle('active'); // glow effect
+    selected.classList.toggle('active');
 });
 
 document.querySelectorAll('.select-items div').forEach(div => {
     div.addEventListener('click', () => {
+        // Update dropdown text
         selected.textContent = div.textContent;
+
+        // Update hidden courier_id input
         courierInput.value = div.getAttribute('data-value');
+
+        // Update visible email input
         emailInput.value = div.getAttribute('data-email');
+
         items.style.display = 'none';
-        selected.classList.remove('active'); // remove glow
+        selected.classList.remove('active');
     });
 });
 
+// Close dropdown if click outside
 document.addEventListener('click', (e) => {
     if(!selected.contains(e.target) && !items.contains(e.target)){
         items.style.display='none';

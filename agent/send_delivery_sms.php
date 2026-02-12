@@ -13,12 +13,13 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent' || !isset($_SES
 $agent_id = $_SESSION['agent_id'];
 $message_sent = '';
 
-// Fetch in-progress couriers assigned to this agent
+// Fetch in-progress and delivered couriers assigned to this agent
 $stmt = $conn->prepare("
-    SELECT c.courier_id, r.name AS receiver_name, r.email AS receiver_email, c.to_location
+    SELECT c.courier_id, r.name AS receiver_name, r.email AS receiver_email, c.to_location, c.status
     FROM couriers c
     JOIN customers r ON c.receiver_id = r.customer_id
-    WHERE c.agent_id = ? AND c.status = 'in-progress'
+    WHERE c.agent_id = ? AND (c.status = 'in-progress' OR c.status = 'delivered')
+    ORDER BY c.courier_id DESC
 ");
 $stmt->bind_param("i", $agent_id);
 $stmt->execute();
@@ -39,7 +40,7 @@ $body = '';
 
 if(!empty($selected_courier_id)){
     $stmt_c = $conn->prepare("
-        SELECT r.name, r.email, c.to_location
+        SELECT r.name, r.email, c.to_location, c.status
         FROM couriers c
         JOIN customers r ON c.receiver_id = r.customer_id
         WHERE c.courier_id = ?
@@ -51,7 +52,8 @@ if(!empty($selected_courier_id)){
         $receiver_name = $courier['name'];
         $receiver_email = $courier['email'];
         $to_location = $courier['to_location'];
-        $body = "Hello $receiver_name,\n\nYour courier will be delivered to $to_location today.\n\nThank you,\nCourier Management Team";
+        $status = $courier['status'];
+        $body = "Hello $receiver_name,\n\nYour courier (Status: $status) will be delivered to $to_location today.\n\nThank you,\nCourier Management Team";
     }
 }
 
@@ -60,7 +62,7 @@ if(isset($_POST['send_delivery_email'])){
     $courier_id = $_POST['courier_id'] ?? null;
     $to = $_POST['to_email'] ?? '';
     $subject = $_POST['subject'] ?? 'Delivery Notification';
-    $body = $_POST['message'] ?? '';
+    $body = strip_tags($_POST['message']); // plain text email
 
     if(send_mail($to, $subject, $body)){
         $message_sent = "Delivery email sent to $receiver_name ($to)";
@@ -106,10 +108,7 @@ body::after {
 }
 
 /* NAVBAR */
-.navbar {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:15px 30px; margin-bottom:30px;
-}
+.navbar { display:flex; justify-content:space-between; align-items:center; padding:15px 30px; margin-bottom:30px; }
 .logo {
     font-size:1.5rem; font-weight:bold;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
@@ -166,12 +165,10 @@ textarea { resize:none; }
     max-height:200px; overflow-y:auto;
 }
 .select-items div {
-    padding:10px; cursor:pointer;
-    border-bottom:1px solid #eee;
+    padding:10px; cursor:pointer; border-bottom:1px solid #eee;
 }
 .select-items div:hover {
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    color:white;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white;
 }
 
 /* BUTTON */
@@ -207,22 +204,21 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
 <?php if($message_sent) echo "<p class='message'>" . htmlspecialchars($message_sent) . "</p>"; ?>
 
 <form method="POST">
-    <label>Select Courier (In-Progress):</label>
+    <label>Select Courier (In-Progress / Delivered):</label>
     <div class="custom-select" id="courier-select">
         <div class="select-selected"><?= $selected_courier_id ? "Courier ID: $selected_courier_id" : "--Select Courier--" ?></div>
         <div class="select-items">
             <?php if(!empty($couriers)): ?>
                 <?php foreach($couriers as $row): ?>
                 <div data-value="<?= $row['courier_id'] ?>" data-email="<?= htmlspecialchars($row['receiver_email']) ?>">
-                    <?= "Courier ID: {$row['courier_id']} - " . htmlspecialchars($row['receiver_name']) . " to {$row['to_location']}" ?>
+                    <?= "ID: {$row['courier_id']} | " . htmlspecialchars($row['receiver_name']) . " | To: {$row['to_location']} | Status: {$row['status']}" ?>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div style="cursor:default; color:#999;">No in-progress couriers</div>
+                <div style="cursor:default; color:#999;">No couriers available</div>
             <?php endif; ?>
         </div>
         <input type="hidden" name="courier_id" value="<?= htmlspecialchars($selected_courier_id) ?>">
-        <input type="hidden" name="to_email" value="<?= htmlspecialchars($receiver_email) ?>">
     </div>
 
     <?php if($selected_courier_id && $receiver_email): ?>

@@ -207,8 +207,8 @@ body::after {
         <a href="manage_agents.php">Manage Agents</a>
         <a href="view_couriers.php">View Couriers</a>
         <a href="download_reports.php">Download Reports</a>
-        <a href="send_sms.php">Send SMS</a>
-        <a href="send_delivery_sms.php">Send Delivery SMS</a>
+        <a href="send_sms.php">Send Email</a>
+        <a href="send_delivery_sms.php">Delivery Email</a>
     </div>
 </div>
 

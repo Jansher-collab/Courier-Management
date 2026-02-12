@@ -11,16 +11,17 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin'){
 
 $message_sent = '';
 
-// Fetch in-progress couriers
+// Fetch all couriers that are either in-progress or delivered
 $query = "SELECT 
             c.courier_id, 
             r.name AS receiver_name, 
             r.email AS receiver_email,
             c.to_location,
-            c.tracking_number
+            c.tracking_number,
+            c.status
           FROM couriers c
           JOIN customers r ON c.receiver_id = r.customer_id
-          WHERE c.status = 'in-progress'
+          WHERE c.status IN ('in-progress', 'delivered')
           ORDER BY c.courier_id ASC";
 
 $result = $conn->query($query);
@@ -46,15 +47,13 @@ if(isset($_POST['send_delivery_email']) && !empty($selected_courier_id)){
 
     if($courier){
 
-        $subject = "Courier Delivery Notification";
+        $subject = "Courier Status Update";
 
         $body =
-"Delivery Notification
-
-Hello ".$courier['name'].",
+"Hello ".$courier['name'].",
 
 Your courier with tracking number ".$courier['tracking_number']." 
-is scheduled to be delivered today to ".$courier['to_location'].".
+is currently ".$courier['status']." and scheduled for delivery to ".$courier['to_location'].".
 
 Thank you for using our Courier Management System.";
 
@@ -86,11 +85,9 @@ Thank you for using our Courier Management System.";
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Send Delivery Email</title>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
-
 body{
 background:url('../assets/admin-delivery-sms.jpg') center/cover no-repeat fixed;
 position:relative;
@@ -103,7 +100,6 @@ top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.35);
 z-index:-1;
 }
-
 .navbar{
 display:flex;
 justify-content:space-between;
@@ -119,7 +115,6 @@ font-weight:bold;
 color:white;
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
-
 .container{
 width:95%;
 max-width:700px;
@@ -133,22 +128,9 @@ box-shadow:0 10px 30px rgba(0,0,0,0.25);
 position:relative;
 overflow:hidden;
 }
-
 h2{text-align:center;margin-bottom:20px;}
-p.message{
-text-align:center;
-font-weight:bold;
-margin-bottom:10px;
-color:#00ff88;
-}
-
-/* DROPDOWN */
-.dropdown-wrapper{
-position:relative;
-width:100%;
-margin-bottom:20px;
-}
-
+p.message{text-align:center;font-weight:bold;margin-bottom:10px;color:#00ff88;}
+.dropdown-wrapper{position:relative;width:100%;margin-bottom:20px;}
 .dropdown-selected{
 width:100%;
 padding:12px;
@@ -164,13 +146,10 @@ border:none;
 outline:none;
 transition:0.3s;
 }
-
-/* Glow effect when active */
 .dropdown-selected.active{
 box-shadow:0 0 15px 4px rgba(255,126,95,0.9);
 border:1px solid #ff7e5f;
 }
-
 .dropdown-selected::after{
 content:"▼";
 position:absolute;
@@ -178,7 +157,6 @@ right:15px;
 top:50%;
 transform:translateY(-50%);
 }
-
 .dropdown-items{
 position:absolute;
 width:100%;
@@ -189,13 +167,11 @@ overflow-x:hidden;
 background:#fff;
 border-radius:10px;
 top:105%;
-left:0;
-right:0;
+left:0; right:0;
 box-shadow:0 5px 15px rgba(0,0,0,0.2);
 display:none;
 z-index:50;
 }
-
 .dropdown-items div{
 padding:10px;
 cursor:pointer;
@@ -203,13 +179,10 @@ color:#000;
 word-break:break-word;
 transition:0.3s;
 }
-
 .dropdown-items div:hover{
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:#fff;
 }
-
-/* BUTTON */
 button{
 display:block;
 margin:25px auto 0 auto;
@@ -223,13 +196,10 @@ background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:#fff;
 transition:0.3s;
 }
-
 button:hover{
 transform:translateY(-2px);
 box-shadow:0 6px 20px rgba(0,0,0,0.25);
 }
-
-/* INPUTS GLOW (for future use if any input fields added) */
 input:focus, textarea:focus{
 box-shadow:0 0 15px 4px rgba(255,126,95,0.9);
 border:1px solid #ff7e5f;
@@ -254,7 +224,7 @@ border:1px solid #ff7e5f;
 
 <div class="dropdown-wrapper">
 
-<label>Select Courier (In-Progress):</label>
+<label>Select Courier (In-Progress / Delivered):</label>
 
 <div class="dropdown-selected" id="selected">
 <?= $selected_courier_id ? "Courier ID: $selected_courier_id" : "--Select Courier--" ?>
@@ -263,7 +233,7 @@ border:1px solid #ff7e5f;
 <div class="dropdown-items" id="dropdown-items">
 <?php foreach($couriers as $c): ?>
 <div data-id="<?= $c['courier_id'] ?>">
-<?= "Courier ID: {$c['courier_id']} - " . htmlspecialchars($c['receiver_name']) . " ({$c['receiver_email']}) to " . htmlspecialchars($c['to_location']) ?>
+<?= "Courier ID: {$c['courier_id']} - " . htmlspecialchars($c['receiver_name']) . " ({$c['receiver_email']}) to " . htmlspecialchars($c['to_location']) . " [{$c['status']}]" ?>
 </div>
 <?php endforeach; ?>
 </div>
@@ -276,6 +246,8 @@ border:1px solid #ff7e5f;
 
 </form>
 
+<div style="height: 80px;"></div> <!-- extra space after form -->
+
 </div>
 
 <script>
@@ -286,7 +258,7 @@ const hiddenInput=document.getElementById('courier_id_val');
 
 selected.addEventListener('click',()=>{
 items.style.display=items.style.display==='block'?'none':'block';
-selected.classList.toggle('active'); // Glow on click
+selected.classList.toggle('active');
 });
 
 document.querySelectorAll('.dropdown-items div').forEach(div=>{
@@ -294,14 +266,14 @@ div.addEventListener('click',()=>{
 selected.textContent=div.textContent;
 hiddenInput.value=div.getAttribute('data-id');
 items.style.display='none';
-selected.classList.remove('active'); // remove glow on selection
+selected.classList.remove('active');
 });
 });
 
 document.addEventListener('click',(e)=>{
 if(!selected.contains(e.target)&&!items.contains(e.target)){
 items.style.display='none';
-selected.classList.remove('active'); // remove glow when clicked outside
+selected.classList.remove('active');
 }
 });
 </script>

@@ -74,15 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $receiver_email = $stmt_email->get_result()->fetch_assoc()['email'];
 
             $subject = "Courier Booking Confirmation";
-            $body = "
-                <h3>Courier Booking Confirmation</h3>
-                <p><b>Tracking Number:</b> $tracking_number</p>
-                <p><b>From:</b> $from_location</p>
-                <p><b>To:</b> $to_location</p>
-                <p><b>Courier Type:</b> $courier_type</p>
-                <p><b>Status:</b> $status</p>
-                <p><b>Delivery Date:</b> $delivery_date</p>
-            ";
+            $body = "Courier Booking Confirmation\nTracking Number: $tracking_number\nFrom: $from_location\nTo: $to_location\nCourier Type: $courier_type\nStatus: $status\nDelivery Date: $delivery_date";
 
             if (!empty($sender_email)) send_mail($sender_email, $subject, $body);
             if (!empty($receiver_email)) send_mail($receiver_email, $subject, $body);
@@ -91,6 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else $error = "Failed to add courier: " . $stmt->error;
     }
 }
+
+// Fetch all customers
+$customers = $conn->query("SELECT customer_id, name FROM customers");
+
+// Fetch all agents
+$agents = $conn->query("SELECT a.agent_id, u.name FROM agents a JOIN users u ON a.user_id=u.user_id");
 ?>
 
 <!DOCTYPE html>
@@ -101,143 +99,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Add Courier - Admin Panel</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html, body{height:100%; width:100%;}
+html, body{height:100%; width:100%; overflow:auto; scroll-behavior:smooth; scrollbar-width:none; -ms-overflow-style:none;}
+body::-webkit-scrollbar{display:none;}
 
-body {
-    background: url('../assets/admin-add-courier.jpg') center/cover no-repeat fixed;
-    position: relative;
-    padding-bottom: 150px;
-}
+body{background:url('../assets/admin-add-courier.jpg') center/cover no-repeat fixed; position:relative; padding-bottom:50px;}
+body::after{ content: ''; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.35); z-index:-1;}
 
-/* Hide scrollbar for WebKit browsers */
-body::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
-
-body::after {
-    content: '';
-    position: fixed;
-    top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.35);
-    z-index: -1;
-}
-
-.navbar{
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:15px 30px;
-    position: sticky;
-    top:0;
-    z-index: 999;
-}
+.navbar{width:100%; display:flex; justify-content:space-between; align-items:center; padding:15px 20px; position: sticky; top:0; z-index:999; }
 .navbar .logo{ font-size:1.5rem; font-weight:bold; color:#fff; }
-.navbar a.logout{
-    text-decoration:none;
-    padding:12px 25px;
-    border-radius:10px;
-    font-weight:bold;
-    color:white;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    transition:0.4s;
-}
-.navbar a.logout:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 20px rgba(0,0,0,0.25);
-}
+.navbar a.logout{ text-decoration:none; padding:10px 20px; border-radius:10px; font-weight:bold; color:white; background:linear-gradient(135deg,#ff7e5f,#feb47b); transition:0.3s;}
+.navbar a.logout:hover{ transform:translateY(-2px); box-shadow:0 6px 15px rgba(0,0,0,0.25); }
 
-.container{
-    width:90%;
-    max-width:600px;
-    margin:40px auto;
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(15px);
-    border-radius:20px;
-    padding:30px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.25);
-    color: #fff;
-    animation:fadeIn 0.7s ease;
-}
+.container{ width:90%; max-width:600px; margin:30px auto; background: rgba(255,255,255,0.15); backdrop-filter: blur(15px); border-radius:15px; padding:25px; box-shadow:0 10px 25px rgba(0,0,0,0.25); color:#fff; }
+h2{text-align:center; margin-bottom:15px; }
+label{ display:block; margin:8px 0 5px; font-weight:600; }
+input, button, .custom-dropdown-btn{ width:100%; padding:12px; border-radius:8px; border:none; outline:none; margin-bottom:12px; font-size:1rem; background: rgba(255,255,255,0.95); color:#000; transition:0.3s;}
+input:focus, .custom-dropdown-btn:focus, .custom-dropdown-btn.active{ box-shadow:0 0 12px 3px rgba(255,126,95,0.8); border:1px solid #ff7e5f; }
 
-h2{ text-align:center; margin-bottom:20px; }
-label{ display:block; margin:10px 0 5px; }
-input, button, .custom-dropdown-btn{
-    width:100%;
-    padding:14px;
-    border-radius:10px;
-    border:none;
-    outline:none;
-    margin-bottom:15px;
-    font-size:1rem;
-    background: rgba(255,255,255,0.95);
-    color:#000;
-    transition:0.3s;
-}
+button{ cursor:pointer; background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white; font-weight:bold; transition:0.3s; }
+button:hover{ transform:translateY(-1px); box-shadow:0 4px 15px rgba(0,0,0,0.25); }
 
-/* Glow effect on focus */
-input:focus, .custom-dropdown-btn:focus, .custom-dropdown-btn.active {
-    box-shadow: 0 0 15px 4px rgba(255,126,95,0.9);
-    border: 1px solid #ff7e5f;
-}
+p.success{ color:#d4ffd4; text-align:center; margin-bottom:12px; }
+p.error{ color:#ffd4d4; text-align:center; margin-bottom:12px; }
 
-button{
-    cursor:pointer;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    color:white;
-    font-weight:bold;
-    transition:0.4s;
-}
-button:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 20px rgba(0,0,0,0.25);
-}
-
-p.success{ color:#d4ffd4; text-align:center; margin-bottom:15px; }
-p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
-
-@keyframes fadeIn{ from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);} }
-
-.custom-dropdown{
-    position: relative;
-    margin-bottom: 15px;
-}
-.custom-dropdown-btn{
-    cursor:pointer;
-    display:flex;
-    justify-content: space-between;
-    align-items: center;
-    outline: none;
-}
+/* Dropdown */
+.custom-dropdown{ position:relative; margin-bottom:12px; }
+.custom-dropdown-btn{ cursor:pointer; display:flex; justify-content:space-between; align-items:center; outline:none; }
 .custom-dropdown-btn::after{ content:"▼"; font-size:0.8rem; color:#333; }
-.custom-dropdown-content{
-    display:none;
-    position:absolute;
-    top:100%; left:0;
-    width:100%;
-    background:white;
-    border-radius:10px;
-    overflow:hidden;
-    box-shadow:0 6px 20px rgba(0,0,0,0.25);
-    z-index:10;
-}
-.custom-dropdown-content div{
-    padding:12px 14px;
-    cursor:pointer;
-    background:white;
-    color:#000;
-    transition:0.3s;
-}
-.custom-dropdown-content div:hover{
-    background: linear-gradient(135deg,#ff7e5f,#feb47b);
-    color:white;
-}
+.custom-dropdown-content{ display:none; position:absolute; top:100%; left:0; width:100%; max-height:250px; overflow:auto; background:white; border-radius:8px; z-index:10; -ms-overflow-style:none; scrollbar-width:none;}
+.custom-dropdown-content::-webkit-scrollbar{display:none;}
+.custom-dropdown-content div{ padding:10px 12px; cursor:pointer; background:white; color:#000; transition:0.3s;}
+.custom-dropdown-content div:hover{ background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white;}
+.custom-dropdown-content input.search-input{ width:100%; padding:8px; margin:0; border:none; border-bottom:1px solid #ccc; outline:none; font-size:0.95rem; }
 
-@media(max-width:600px){
-    .container{ padding:20px; }
-    input, button, .custom-dropdown-btn, .custom-dropdown-content div{ font-size:0.9rem; padding:10px; }
-}
+@media(max-width:600px){ .container{ padding:15px; } input, button, .custom-dropdown-btn, .custom-dropdown-content div{ font-size:0.9rem; padding:8px; } }
 </style>
 </head>
 <body>
@@ -253,28 +148,32 @@ p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
     <?php if($success) echo "<p class='success'>$success</p>"; ?>
 
     <form method="POST">
+        <!-- Sender -->
         <label>Sender:</label>
         <div class="custom-dropdown" id="sender-dropdown">
             <div class="custom-dropdown-btn" tabindex="0">Select Sender</div>
             <div class="custom-dropdown-content">
+                <input type="text" class="search-input" placeholder="Search sender...">
                 <?php
-                $customers = $conn->query("SELECT customer_id, name FROM customers");
+                $customers->data_seek(0);
                 while($row = $customers->fetch_assoc()){
-                    echo "<div data-value='".htmlspecialchars($row['customer_id'])."'>".htmlspecialchars($row['name'])."</div>";
+                    echo "<div data-value='".htmlspecialchars($row['customer_id'])."'>".htmlspecialchars($row['name'])." (ID: {$row['customer_id']})</div>";
                 }
                 ?>
             </div>
             <input type="hidden" name="sender_id" required>
         </div>
 
+        <!-- Receiver -->
         <label>Receiver:</label>
         <div class="custom-dropdown" id="receiver-dropdown">
             <div class="custom-dropdown-btn" tabindex="0">Select Receiver</div>
             <div class="custom-dropdown-content">
+                <input type="text" class="search-input" placeholder="Search receiver...">
                 <?php
                 $customers->data_seek(0);
                 while($row = $customers->fetch_assoc()){
-                    echo "<div data-value='".htmlspecialchars($row['customer_id'])."'>".htmlspecialchars($row['name'])."</div>";
+                    echo "<div data-value='".htmlspecialchars($row['customer_id'])."'>".htmlspecialchars($row['name'])." (ID: {$row['customer_id']})</div>";
                 }
                 ?>
             </div>
@@ -283,24 +182,23 @@ p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
 
         <label>From City:</label>
         <input type="text" name="from_location" required>
-
         <label>To City:</label>
         <input type="text" name="to_location" required>
-
         <label>Courier Type:</label>
         <input type="text" name="courier_type" required>
-
         <label>Delivery Date:</label>
         <input type="date" name="delivery_date" required>
 
+        <!-- Agent -->
         <label>Assign Agent:</label>
         <div class="custom-dropdown" id="agent-dropdown">
             <div class="custom-dropdown-btn" tabindex="0">Select Agent</div>
             <div class="custom-dropdown-content">
+                <input type="text" class="search-input" placeholder="Search agent...">
                 <?php
-                $agents = $conn->query("SELECT a.agent_id, u.name FROM agents a JOIN users u ON a.user_id=u.user_id");
+                $agents->data_seek(0);
                 while($row = $agents->fetch_assoc()){
-                    echo "<div data-value='".htmlspecialchars($row['agent_id'])."'>".htmlspecialchars($row['name'])."</div>";
+                    echo "<div data-value='".htmlspecialchars($row['agent_id'])."'>".htmlspecialchars($row['name'])." (ID: {$row['agent_id']})</div>";
                 }
                 ?>
             </div>
@@ -309,39 +207,46 @@ p.error{ color:#ffd4d4; text-align:center; margin-bottom:15px; }
 
         <button type="submit">Add Courier</button>
     </form>
-</div> <!-- end of container -->
-
-<!-- Extra space after container for professional page look -->
-<div style="height: 150px;"></div>
+</div>
 
 <script>
 document.querySelectorAll('.custom-dropdown').forEach(dropdown => {
     const btn = dropdown.querySelector('.custom-dropdown-btn');
     const content = dropdown.querySelector('.custom-dropdown-content');
     const hiddenInput = dropdown.querySelector('input[type=hidden]');
+    const searchInput = content.querySelector('.search-input');
 
     btn.addEventListener('click', () => {
-        content.style.display = content.style.display === 'block' ? 'none' : 'block';
-        btn.classList.toggle('active'); // glow effect
+        content.style.display = content.style.display==='block'?'none':'block';
+        btn.classList.toggle('active');
+        if(searchInput) searchInput.focus();
     });
 
-    content.querySelectorAll('div').forEach(item => {
-        item.addEventListener('click', () => {
+    content.querySelectorAll('div[data-value]').forEach(item=>{
+        item.addEventListener('click', ()=>{
             hiddenInput.value = item.dataset.value;
             btn.textContent = item.textContent;
-            content.style.display = 'none';
+            content.style.display='none';
             btn.classList.remove('active');
         });
     });
 
-    document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target)) {
-            content.style.display = 'none';
+    if(searchInput){
+        searchInput.addEventListener('keyup', ()=>{
+            const filter = searchInput.value.toLowerCase();
+            content.querySelectorAll('div[data-value]').forEach(item=>{
+                item.style.display = item.textContent.toLowerCase().includes(filter)?'block':'none';
+            });
+        });
+    }
+
+    document.addEventListener('click', e=>{
+        if(!dropdown.contains(e.target)){
+            content.style.display='none';
             btn.classList.remove('active');
         }
     });
 });
 </script>
-
 </body>
 </html>
