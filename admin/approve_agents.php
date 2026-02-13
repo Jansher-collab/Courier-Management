@@ -20,7 +20,6 @@ if(isset($_POST['approve'])){
 
     if($stmt->execute()){
 
-        // fetch agent email
         $stmt2=$conn->prepare("
             SELECT u.email,u.name 
             FROM users u
@@ -52,7 +51,6 @@ if(isset($_POST['approve'])){
 if(isset($_POST['reject'])){
     $agent_id=intval($_POST['agent_id']);
 
-    // fetch agent info before deletion
     $stmt2=$conn->prepare("
         SELECT u.email,u.name 
         FROM users u
@@ -63,7 +61,6 @@ if(isset($_POST['reject'])){
     $stmt2->execute();
     $agent=$stmt2->get_result()->fetch_assoc();
 
-    // delete agent record
     $stmt=$conn->prepare("DELETE FROM agents WHERE agent_id=?");
     $stmt->bind_param("i",$agent_id);
 
@@ -83,7 +80,6 @@ if(isset($_POST['reject'])){
     }
 }
 
-// ------------ FETCH PENDING AGENTS -------------
 $agents=$conn->query("
 SELECT a.agent_id,u.name,u.email,a.branch
 FROM agents a
@@ -103,80 +99,96 @@ ORDER BY a.agent_id DESC
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 
 html,body{
-    height:100%;
-    overflow:hidden;
-    background:url('../assets/admin-agents-approval.avif') center/cover no-repeat fixed;
-    position:relative;
+height:100%;
+overflow:hidden;
+background:url('../assets/admin-agents-approval.avif') center/cover no-repeat fixed;
+position:relative;
 }
 
 body::after{
-    content:'';
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.35);
-    z-index:-1;
+content:'';
+position:fixed;
+top:0; left:0;
+width:100%; height:100%;
+background:rgba(0,0,0,0.35);
+z-index:-1;
 }
 
 .scroll-wrapper{
-    height:100%;
-    overflow:auto;
-    -ms-overflow-style:none;
-    scrollbar-width:none;
+height:100%;
+overflow:auto;
+-ms-overflow-style:none;
+scrollbar-width:none;
 }
 .scroll-wrapper::-webkit-scrollbar{display:none;}
 
 .navbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:15px 30px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 30px;
 }
+
 .logo{
-    font-size:1.5rem;
-    font-weight:bold;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+font-size:1.5rem;
+font-weight:bold;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
 }
+
+.nav-buttons{
+display:flex;
+gap:10px;
+}
+
+.btn{
+text-decoration:none;
+padding:12px 25px;
+border-radius:10px;
+font-weight:bold;
+color:white;
+}
+
+/* DASHBOARD */
+.dashboard{
+background:linear-gradient(135deg,#ffd200,#f7971e);
+}
+
+/* LOGOUT */
 .logout{
-    text-decoration:none;
-    padding:12px 25px;
-    border-radius:10px;
-    font-weight:bold;
-    color:white;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
 
 .container{
-    max-width:900px;
-    margin:50px auto;
-    background:#fff;
-    padding:25px;
-    border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.25);
+max-width:900px;
+margin:50px auto;
+background:#fff;
+padding:25px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
 }
 
 h2{text-align:center;margin-bottom:20px;color:#ff7e5f;}
 
 table{
-    width:100%;
-    border-collapse:collapse;
+width:100%;
+border-collapse:collapse;
 }
 th,td{
-    padding:12px;
-    border-bottom:1px solid #ddd;
-    text-align:left;
+padding:12px;
+border-bottom:1px solid #ddd;
+text-align:left;
 }
 
 button{
-    padding:6px 14px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-    margin-right:5px;
-    color:white;
+padding:6px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+margin-right:5px;
+color:white;
 }
 button.approve{background:linear-gradient(135deg,#28a745,#2ecc71);}
 button.reject{background:linear-gradient(135deg,#e74c3c,#ff4d4d);}
@@ -191,7 +203,12 @@ p.error{color:#dc3545;text-align:center;margin-bottom:15px;}
 
 <div class="navbar">
 <div class="logo">Admin Panel</div>
-<a href="../logout.php" class="logout">Logout</a>
+
+<div class="nav-buttons">
+<a href="dashboard.php" class="btn dashboard">Dashboard</a>
+<a href="../logout.php" class="btn logout">Logout</a>
+</div>
+
 </div>
 
 <div class="container">

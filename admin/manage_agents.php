@@ -77,13 +77,9 @@ if ($result) {
 /* RESET */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 
-/* HIDE SCROLLBAR BUT KEEP SCROLL */
-html{
-scrollbar-width:none;
-}
-html::-webkit-scrollbar{
-display:none;
-}
+/* HIDE SCROLLBAR */
+html{scrollbar-width:none;}
+html::-webkit-scrollbar{display:none;}
 
 /* BACKGROUND */
 body{
@@ -106,13 +102,28 @@ justify-content:space-between;
 align-items:center;
 padding:15px 30px;
 }
-.logo{color:#fff;font-size:1.5rem;font-weight:bold;}
-.logout{
+.logo{;font-size:1.5rem;font-weight:bold; color:#ff7e5f;}
+
+.nav-buttons{
+display:flex;
+gap:10px;
+}
+
+.btn{
 text-decoration:none;
 padding:12px 25px;
 border-radius:10px;
 font-weight:bold;
 color:white;
+}
+
+/* DASHBOARD YELLOW */
+.dashboard{
+background:linear-gradient(135deg,#ffd200,#f7971e);
+}
+
+/* LOGOUT */
+.logout{
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
 
@@ -206,7 +217,12 @@ color:#333;
 
 <div class="navbar">
 <div class="logo">Courier Admin</div>
-<a href="../logout.php" class="logout">Logout</a>
+
+<div class="nav-buttons">
+<a href="dashboard.php" class="btn dashboard">Dashboard</a>
+<a href="../logout.php" class="btn logout">Logout</a>
+</div>
+
 </div>
 
 <div class="container">

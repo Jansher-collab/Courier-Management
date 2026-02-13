@@ -57,7 +57,7 @@ body::after {
 .navbar .logo{
     font-size:1.5rem;
     font-weight:bold;
-    color:#ffffff;
+     color:#ff7e5f;
 }
 .navbar a.logout{
     text-decoration:none;

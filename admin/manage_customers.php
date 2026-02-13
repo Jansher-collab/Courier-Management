@@ -39,11 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $customer_id > 0) {
     }
 }
 
+// Handle search by name or ID
 $search = trim($_GET['search'] ?? '');
 if ($search !== '') {
-    $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY customer_id DESC");
+    $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR customer_id LIKE ? ORDER BY customer_id DESC");
     $like = "%$search%";
-    $stmt->bind_param("sss", $like, $like, $like);
+    $stmt->bind_param("ss", $like, $like);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
@@ -62,187 +63,183 @@ if($result) while($row=$result->fetch_assoc()) $customers[]=$row;
 <title>Manage Customers</title>
 
 <style>
-
-/* RESET */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-
-/* HIDE SCROLLBAR */
 html{scrollbar-width:none;}
 html::-webkit-scrollbar{display:none;}
 
-/* BACKGROUND */
 body{
-background:url('../assets/admin-manage-customers.jpg') center/cover no-repeat fixed;
-position:relative;
-padding-bottom:120px;
+    background:url('../assets/admin-manage-customers.jpg') center/cover no-repeat fixed;
+    position:relative;
+    padding-bottom:120px;
+    padding-top:80px; /* space for navbar */
 }
 body::after{
-content:'';
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.35);
-z-index:-1;
+    content:'';
+    position:fixed;
+    top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.35);
+    z-index:-1;
 }
 
 /* NAVBAR */
 .navbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:999;
 }
-.logo{color:#fff;font-size:1.5rem;font-weight:bold;}
+.logo{
+    color:#ff7e5f;
+    font-size:1.5rem;
+    font-weight:bold;
+}
+.nav-buttons{
+    display:flex;
+    gap:10px;
+}
+.btn{
+    text-decoration:none;
+    padding:12px 20px;
+    border-radius:10px;
+    font-weight:bold;
+    color:white;
+    transition:0.3s;
+}
+.dashboard{
+    background:linear-gradient(135deg,#ffd200,#f7971e);
+}
 .logout{
-text-decoration:none;
-padding:12px 25px;
-border-radius:10px;
-font-weight:bold;
-color:white;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
 
 /* CONTAINER */
 .container{
-width:95%;
-max-width:1200px;
-margin:50px auto;
-background:rgba(255,255,255,0.15);
-backdrop-filter:blur(15px);
-border-radius:20px;
-padding:25px;
-color:#fff;
+    width:95%;
+    max-width:1200px;
+    margin:30px auto 50px auto;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:25px;
+    color:#fff;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
 }
 
 /* SEARCH */
 .search-box{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-bottom:20px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
 }
 .search-box input{
-flex:1;
-padding:12px;
-border-radius:10px;
-border:none;
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:none;
 }
 .search-box button{
-padding:12px 20px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-color:#fff;
-font-weight:bold;
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    color:#fff;
+    font-weight:bold;
 }
 
 /* TABLE */
 .table-wrapper{overflow-x:auto;}
-
 table{
-width:100%;
-border-collapse:collapse;
-background:#ffffff;
-color:#000;
-border-radius:12px;
-overflow:hidden;
-box-shadow:0 5px 20px rgba(0,0,0,0.15);
+    width:100%;
+    border-collapse:collapse;
+    background:#ffffff;
+    color:#000;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 5px 20px rgba(0,0,0,0.15);
 }
-
 th,td{padding:14px;text-align:left;}
-
 th{background:#ff7e5f;color:#fff;}
-
 td{
-background:#ffffff;
-border-bottom:1px solid #eee;
+    background:#ffffff;
+    border-bottom:1px solid #eee;
 }
-
 input{
-width:100%;
-padding:8px;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-button.action{
-padding:8px 12px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-margin:2px 2px;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-color:#fff;
-font-weight:bold;
-white-space:nowrap;
-}
-
-/* MEDIUM DEVICES */
-@media(min-width:769px) and (max-width:1024px){
-td[data-label="Actions"]{
-display:flex;
-gap:6px; /* reduce space between buttons */
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
 }
 button.action{
-flex:1;
-}
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin:2px 2px;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    color:#fff;
+    font-weight:bold;
+    white-space:nowrap;
 }
 
-/* MOBILE TABLE */
+/* RESPONSIVE TABLE */
 @media(max-width:768px){
-
 table,thead,tbody,tr,td{display:block;width:100%;}
 thead{display:none;}
-
 tr{
-margin-bottom:15px;
-background:#ffffff;
-padding:15px;
-border-radius:12px;
-box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom:15px;
+    background:#ffffff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
-
 td{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:8px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
 }
-
 td::before{
-content:attr(data-label);
-font-weight:bold;
-margin-right:10px;
-color:#333;
+    content:attr(data-label);
+    font-weight:bold;
+    margin-right:10px;
+    color:#333;
 }
-
 td[data-label="Actions"]{
-flex-direction:row;
-justify-content:flex-start;
-gap:6px;
+    flex-direction:row;
+    justify-content:flex-start;
+    gap:6px;
 }
-
 button.action{
-padding:8px 10px;
-font-size:0.9rem;
+    padding:8px 10px;
+    font-size:0.9rem;
 }
 }
-
 </style>
 </head>
 
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
-<div class="logo">Courier Admin</div>
-<a href="../logout.php" class="logout">Logout</a>
+    <div class="logo">Courier Admin</div>
+    <div class="nav-buttons">
+        <a href="dashboard.php" class="btn dashboard">Dashboard</a>
+        <a href="../logout.php" class="btn logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">
 <h2 style="text-align:center;margin-bottom:20px;">Manage Customers</h2>
 
+<!-- SEARCH FORM -->
 <form method="GET" class="search-box">
-<input type="text" name="search" placeholder="Search customers..." value="<?= htmlspecialchars($search) ?>">
+<input type="text" name="search" placeholder="Search by Name or ID..." value="<?= htmlspecialchars($search) ?>">
 <button type="submit">Search</button>
 </form>
 
@@ -268,7 +265,6 @@ font-size:0.9rem;
 <td data-label="Email"><input id="email-<?= $c['customer_id'] ?>" value="<?= htmlspecialchars($c['email']) ?>"></td>
 <td data-label="Phone"><input id="phone-<?= $c['customer_id'] ?>" value="<?= htmlspecialchars($c['phone']) ?>"></td>
 <td data-label="Address"><input id="address-<?= $c['customer_id'] ?>" value="<?= htmlspecialchars($c['address']) ?>"></td>
-
 <td data-label="Actions">
 <button class="action" onclick="updateCustomer(<?= $c['customer_id'] ?>)">Update</button>
 <button class="action" onclick="deleteCustomer(<?= $c['customer_id'] ?>)">Delete</button>

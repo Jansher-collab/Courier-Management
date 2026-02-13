@@ -11,7 +11,6 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin'){
 
 $message_sent = '';
 
-// Fetch all couriers
 $query = "SELECT 
             c.courier_id, 
             r.name AS receiver_name, 
@@ -24,13 +23,12 @@ $result = $conn->query($query);
 $couriers = [];
 while($row = $result->fetch_assoc()) $couriers[] = $row;
 
-// Pre-fill form if courier selected
 $selected_courier_id = $_POST['courier_id'] ?? '';
 $to_email = '';
 $courier_id_val = '';
 
 if($selected_courier_id){
-    $stmt_c = $conn->prepare("SELECT r.email, r.name, c.tracking_number FROM couriers c JOIN customers r ON c.receiver_id = r.customer_id WHERE c.courier_id = ?");
+    $stmt_c = $conn->prepare("SELECT r.email FROM couriers c JOIN customers r ON c.receiver_id = r.customer_id WHERE c.courier_id = ?");
     $stmt_c->bind_param("i", $selected_courier_id);
     $stmt_c->execute();
     $courier_data = $stmt_c->get_result()->fetch_assoc();
@@ -38,25 +36,14 @@ if($selected_courier_id){
     $courier_id_val = $selected_courier_id;
 }
 
-// Send email if form submitted
 if(isset($_POST['send_email'])){
     $courier_id = $_POST['courier_id'] ?: null;
     $to = $_POST['to_email'];
     $subject = $_POST['subject'];
-    $body_content = trim($_POST['message']); // plain text
+    $body_content = trim($_POST['message']);
 
-    // Send as plain text (no HTML tags)
-    if(send_mail($to, $subject, $body_content, false)){ // 4th param false = plain text
+    if(send_mail($to, $subject, $body_content, false)){
         $message_sent = "Email sent successfully to " . htmlspecialchars($to);
-
-        if($courier_id){
-            $stmt_log = $conn->prepare(
-                "INSERT INTO courier_logs (courier_id, status, message, notified_via) VALUES (?, ?, ?, 'email')"
-            );
-            $status_msg = "Custom email sent by admin";
-            $stmt_log->bind_param("iss", $courier_id, $status_msg, $body_content);
-            $stmt_log->execute();
-        }
     } else {
         $message_sent = "Failed to send email.";
     }
@@ -68,232 +55,192 @@ if(isset($_POST['send_email'])){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send Email to Customer</title>
+<title>Send Email</title>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
-body{
-background:url('../assets/send-sms.jpg') center/cover no-repeat fixed;
-position:relative;
-padding-top:80px;
-padding-bottom:50px;
-overflow-x:hidden;
-}
-body::after{
-content:'';
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.35);
-z-index:-1;
-}
-.navbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px 30px;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-z-index:1000;
-}
-.logo{color:#fff;font-size:1.5rem;font-weight:bold;}
-.logout{
-text-decoration:none;
-padding:12px 25px;
-border-radius:10px;
-font-weight:bold;
-color:white;
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-}
+body{background:url('../assets/send-sms.jpg') center/cover no-repeat fixed;padding-top:80px;overflow-x:hidden;}
+body::-webkit-scrollbar{display:none;}
+
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;position:fixed;top:0;width:100%;}
+.logo{ color:#ff7e5f;font-size:1.5rem;font-weight:bold;}
+.nav-buttons{display:flex;gap:10px;}
+.btn{text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;color:white;}
+.dashboard{background:linear-gradient(135deg,#ffd200,#f7971e);}
+.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+
 .container{
-width:95%;
-max-width:700px;
-margin:50px auto;
-background:rgba(255,255,255,0.15);
-backdrop-filter:blur(15px);
-border-radius:20px;
-padding:30px;
-color:#fff;
-box-shadow:0 10px 30px rgba(0,0,0,0.25);
+width:95%;max-width:700px;margin:50px auto;background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:20px;padding:30px;color:#fff;
 }
-h2{text-align:center;margin-bottom:20px;}
+
 form{display:flex;flex-direction:column;gap:15px;}
-label{font-weight:bold;margin-bottom:5px;}
-input[type=email], input[type=text], textarea{
-width:100%;
+
+input,textarea{
 padding:12px;
 border-radius:10px;
 border:none;
-outline:none;
-font-size:1rem;
-background: rgba(255,255,255,0.95);
+background:#fff;
 color:#000;
 transition:0.3s;
 }
+
+/* --- Glow up on focus --- */
 input:focus, textarea:focus{
-box-shadow:0 0 15px 4px rgba(255,126,95,0.9);
+outline:none;
+box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
 border:1px solid #ff7e5f;
 }
+
 button{
 padding:12px;
 border-radius:10px;
 border:none;
 cursor:pointer;
-font-size:1rem;
 font-weight:bold;
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:#fff;
-transition:0.4s;
+transition:0.3s;
 }
-button:hover{
-transform:translateY(-2px);
-box-shadow:0 6px 20px rgba(0,0,0,0.25);
-}
-p.message{
-text-align:center;
-font-weight:bold;
-margin-bottom:10px;
-color:#d4ffd4;
-}
-/* CUSTOM DROPDOWN */
-.dropdown-wrapper{position:relative;width:100%;}
+button:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,0,0,0.25);}
+
+/* Dropdown */
+.dropdown-wrapper{position:relative;}
 .dropdown-selected{
-width:100%;
 padding:12px;
 border-radius:10px;
 background:#fff;
 color:#000;
 cursor:pointer;
-user-select:none;
-position:relative;
-border:none;
-outline:none;
 transition:0.3s;
 }
+/* Glow when clicked */
 .dropdown-selected.active{
-box-shadow:0 0 15px 4px rgba(255,126,95,0.9);
+box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
 border:1px solid #ff7e5f;
 }
-.dropdown-selected::after{
-content:"▼";
-position:absolute;
-right:15px;
-top:50%;
-transform:translateY(-50%);
-font-size:0.8rem;
-color:#333;
-}
+
 .dropdown-items{
 position:absolute;
 width:100%;
-max-height:200px;
+max-height:250px;
 overflow-y:auto;
 background:#fff;
 border-radius:10px;
-top:100%;
-left:0;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
 display:none;
 z-index:100;
+scrollbar-width:none;
 }
+.dropdown-items::-webkit-scrollbar{display:none;}
+
 .dropdown-items div{
 padding:10px;
 cursor:pointer;
-transition:0.3s;
 color:#000;
 }
 .dropdown-items div:hover{
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
+background:#ff7e5f;
 color:#fff;
 }
-.dropdown-items::-webkit-scrollbar{display:none;}
-.dropdown-items{ -ms-overflow-style:none; scrollbar-width:none;}
-@media(max-width:600px){
-.container{padding:20px;margin-top:80px;}
-input, textarea, button, .dropdown-selected{font-size:0.9rem;padding:10px;}
+
+.search-box{
+padding:10px;
+border:none;
+border-bottom:1px solid #ccc;
+outline:none;
+width:100%;
+transition:0.3s;
+}
+/* Glow on focus for search box */
+.search-box:focus{
+box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
+border:1px solid #ff7e5f;
 }
 </style>
 </head>
+
 <body>
 
 <div class="navbar">
 <div class="logo">Courier Admin</div>
-<a href="../logout.php" class="logout">Logout</a>
+<div class="nav-buttons">
+<a href="dashboard.php" class="btn dashboard">Dashboard</a>
+<a href="../logout.php" class="btn logout">Logout</a>
+</div>
 </div>
 
 <div class="container">
-<h2>Send Email to Customer (Admin)</h2>
-<?php if($message_sent) echo "<p class='message'>$message_sent</p>"; ?>
 
-<!-- Custom dropdown -->
-<form method="POST" class="dropdown-wrapper">
-<label>Select Courier (optional for pre-fill):</label>
-<div class="dropdown-selected" id="selected"><?= $selected_courier_id ? "Courier ID: $selected_courier_id" : "--Select Courier--" ?></div>
+<h2>Send Email to Customer</h2>
+<?php if($message_sent) echo "<p>$message_sent</p>"; ?>
+
+<div class="dropdown-wrapper">
+<label>Select Courier:</label>
+<div class="dropdown-selected" id="selected">--Select Courier--</div>
 <div class="dropdown-items" id="dropdown-items">
+<input type="text" class="search-box" id="searchInput" placeholder="Search by ID, Name or Email...">
 <?php foreach($couriers as $c): ?>
 <div 
-    data-email="<?= htmlspecialchars($c['receiver_email'], ENT_QUOTES) ?>" 
-    data-id="<?= htmlspecialchars($c['courier_id'], ENT_QUOTES) ?>">
-    <?= "Courier ID: " . htmlspecialchars($c['courier_id']) . " - " 
-        . htmlspecialchars($c['receiver_name']) . " (" 
-        . htmlspecialchars($c['receiver_email']) . ")" ?>
+data-search="<?= strtolower($c['courier_id']." ".$c['receiver_name']." ".$c['receiver_email']) ?>"
+data-email="<?= htmlspecialchars($c['receiver_email'], ENT_QUOTES) ?>"
+data-id="<?= htmlspecialchars($c['courier_id'], ENT_QUOTES) ?>">
+<?= "Courier ID: ".$c['courier_id']." - ".$c['receiver_name']." (".$c['receiver_email'].")" ?>
 </div>
 <?php endforeach; ?>
 </div>
-<input type="hidden" name="courier_id" id="courier_id_val" value="<?= $selected_courier_id ?>">
-</form>
+</div>
 
 <form method="POST">
-<input type="hidden" name="courier_id" id="hidden_courier_id" value="<?= $courier_id_val ?>">
+<input type="hidden" name="courier_id" id="courier_id_field">
 
-<label>To (Email Address):</label>
-<input type="email" id="to_email_input" name="to_email" value="<?= htmlspecialchars($to_email) ?>" required />
+<label>Email:</label>
+<input type="email" id="to_email_input" name="to_email" required>
 
 <label>Subject:</label>
-<input type="text" name="subject" value="Courier Notification" required />
+<input type="text" name="subject" value="Courier Notification" required>
 
 <label>Message:</label>
-<textarea name="message" rows="5" required>
-Hello, your courier is being processed. Please check your tracking number for updates.
-</textarea>
+<textarea name="message" rows="5" required>Hello, your courier is being processed.</textarea>
 
 <button type="submit" name="send_email">Send Email</button>
 </form>
+
 </div>
 
 <script>
-const selected = document.getElementById('selected');
-const items = document.getElementById('dropdown-items');
-const hiddenInput = document.getElementById('courier_id_val');
-const hiddenCourierId = document.getElementById('hidden_courier_id');
-const emailInput = document.getElementById('to_email_input');
+const selected=document.getElementById('selected');
+const items=document.getElementById('dropdown-items');
+const emailInput=document.getElementById('to_email_input');
+const courierField=document.getElementById('courier_id_field');
+const searchInput=document.getElementById('searchInput');
 
-selected.addEventListener('click', ()=>{
-    items.style.display = items.style.display === 'block' ? 'none' : 'block';
-    selected.classList.toggle('active');
+selected.onclick=()=>{
+items.style.display=items.style.display==='block'?'none':'block';
+selected.classList.toggle('active');
+};
+
+document.querySelectorAll('.dropdown-items div[data-id]').forEach(div=>{
+div.onclick=()=>{
+selected.textContent=div.textContent;
+emailInput.value=div.dataset.email;
+courierField.value=div.dataset.id;
+items.style.display='none';
+selected.classList.remove('active');
+};
 });
 
-document.querySelectorAll('.dropdown-items div').forEach(div=>{
-    div.addEventListener('click', ()=>{
-        const courierId = div.getAttribute('data-id');
-        const email = div.getAttribute('data-email');
-
-        selected.textContent = div.textContent;
-        hiddenInput.value = courierId;
-        hiddenCourierId.value = courierId;
-        emailInput.value = email;
-
-        items.style.display = 'none';
-        selected.classList.remove('active');
-    });
+searchInput.onkeyup=()=>{
+const value=searchInput.value.toLowerCase();
+document.querySelectorAll('.dropdown-items div[data-id]').forEach(div=>{
+div.style.display=div.dataset.search.includes(value)?'block':'none';
 });
+};
 
-document.addEventListener('click', (e)=>{
-    if(!selected.contains(e.target) && !items.contains(e.target)){
-        items.style.display='none';
-        selected.classList.remove('active');
-    }
+document.addEventListener('click',e=>{
+if(!selected.contains(e.target)&&!items.contains(e.target)){
+items.style.display='none';
+selected.classList.remove('active');
+}
 });
 </script>
 

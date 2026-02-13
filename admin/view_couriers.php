@@ -5,7 +5,8 @@ include('../includes/db.php');
 
 requireAdmin();
 
-// Fetch all couriers with sender, receiver, and agent info
+$search = trim($_GET['search'] ?? '');
+
 $sql = "
     SELECT c.*, 
            s.name AS sender_name, s.email AS sender_email,
@@ -17,14 +18,34 @@ $sql = "
     LEFT JOIN customers r ON c.receiver_id = r.customer_id
     LEFT JOIN agents a ON c.agent_id = a.agent_id
     LEFT JOIN users u ON a.user_id = u.user_id
-    ORDER BY c.created_at DESC
 ";
 
-$result = $conn->query($sql);
+$params = [];
+$types = "";
 
-if (!$result) {
-    die("Database query failed: " . $conn->error);
+if(!empty($search)){
+    $sql .= " WHERE 
+        CAST(c.courier_id AS CHAR) LIKE ?
+        OR LOWER(TRIM(s.name)) LIKE LOWER(TRIM(?))
+        OR LOWER(TRIM(r.name)) LIKE LOWER(TRIM(?))
+        OR LOWER(TRIM(s.email)) LIKE LOWER(TRIM(?))
+        OR LOWER(TRIM(r.email)) LIKE LOWER(TRIM(?))
+    ";
+    $search_param = "%".$search."%";
+    $params = [$search_param,$search_param,$search_param,$search_param,$search_param];
+    $types = "sssss";
 }
+
+$sql .= " ORDER BY c.created_at DESC";
+
+$stmt = $conn->prepare($sql);
+
+if(!empty($params)){
+    $stmt->bind_param($types,...$params);
+}
+
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,94 +55,125 @@ if (!$result) {
 <title>View Couriers</title>
 
 <style>
-/* RESET */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
 
-/* HIDE SCROLLBAR */
-html{scrollbar-width:none;}
-html::-webkit-scrollbar{display:none;}
-
-/* BACKGROUND */
 body{
-    background:url('../assets/admin-view-couriers.jpg') center/cover no-repeat fixed;
-    position:relative;
-    padding-bottom:120px;
+background:url('../assets/admin-view-couriers.jpg') center/cover no-repeat fixed;
+position:relative;
+padding-bottom:120px;
+padding-top:80px; /* space for fixed navbar */
 }
 body::after{
-    content:''; position:fixed; top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.35); z-index:-1;
+content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.35);z-index:-1;
 }
 
 /* NAVBAR */
 .navbar{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:15px 30px;
+display:flex;justify-content:space-between;align-items:center;
+padding:15px 30px;
+position:fixed;
+top:0;width:100%;
+z-index:999;
+/* Removed background and blur to keep navbar transparent */
 }
-.logo{color:#fff;font-size:1.5rem;font-weight:bold;}
+.logo{;font-size:1.5rem;font-weight:bold; color:#ff7e5f;}
+.nav-buttons{
+display:flex;
+gap:10px;
+}
+.btn{
+text-decoration:none;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+color:white;
+transition:0.3s;
+}
+.dashboard{
+background:linear-gradient(135deg,#ffd200,#f7971e);
+}
 .logout{
-    text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; color:white; background:linear-gradient(135deg,#ff7e5f,#feb47b);
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
 
 /* CONTAINER */
 .container{
-    width:95%; max-width:1400px; margin:50px auto;
-    background:rgba(255,255,255,0.15); backdrop-filter:blur(15px);
-    border-radius:20px; padding:25px; color:#fff;
-    overflow-x:hidden; /* Remove horizontal scroll */
+width:95%;max-width:1400px;margin:50px auto;
+background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);
+border-radius:20px;padding:25px;color:#fff;
+overflow-x:hidden;
 }
 
-/* TABLE */
+/* SEARCH */
+.search-box{
+width:100%;
+margin-bottom:20px;
+display:flex;
+gap:10px;
+}
+.search-box input{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+}
+.search-box button{
+padding:12px 20px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+color:#fff;
+}
+
 table{
-    width:100%; border-collapse:collapse;
-    background:#ffffff; color:#000; border-radius:12px;
-    overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,0.15);
-    table-layout:auto; /* allow auto column width, no fixed layout */
-    word-wrap:break-word; /* wrap long text */
+width:100%;border-collapse:collapse;
+background:#ffffff;color:#000;border-radius:12px;
+overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,0.15);
 }
-
-th, td{padding:14px;text-align:left; vertical-align:top;}
-th{background:#ff7e5f;color:#fff; font-weight:600;}
+th,td{padding:14px;text-align:left;vertical-align:top;}
+th{background:#ff7e5f;color:#fff;font-weight:600;}
 td{background:#ffffff;border-bottom:1px solid #eee;}
 
-/* ACTION BUTTONS */
 a.button{
-    padding:8px 12px; border-radius:8px; text-decoration:none;
-    color:#fff; font-weight:bold; margin:2px; display:inline-block; white-space:normal;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+padding:8px 12px;border-radius:8px;text-decoration:none;
+color:#fff;font-weight:bold;margin:2px;display:inline-block;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
 }
 
-/* DESKTOP & TABLET RESPONSIVE */
-@media(min-width:769px) and (max-width:1400px){
-    th, td{padding:12px 10px;}
-    a.button{padding:6px 10px;}
-}
-
-/* MOBILE TABLE */
 @media(max-width:768px){
-    table, thead, tbody, tr, td{display:block;width:100%;}
-    thead{display:none;}
-    tr{margin-bottom:15px;background:#ffffff;padding:15px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,0.1);}
-    td{
-        display:flex; justify-content:space-between; align-items:center;
-        padding:8px 0; word-break:break-word;
-    }
-    td::before{content:attr(data-label); font-weight:bold; margin-right:10px; color:#333; flex-shrink:0;}
-    td[data-label="Actions"]{flex-direction:row; justify-content:flex-start; gap:6px;}
-    a.button{padding:6px 10px; font-size:0.85rem;}
+table,thead,tbody,tr,td{display:block;width:100%;}
+thead{display:none;}
+tr{margin-bottom:15px;background:#ffffff;padding:15px;border-radius:12px;}
+td{display:flex;justify-content:space-between;padding:8px 0;}
+td::before{content:attr(data-label);font-weight:bold;margin-right:10px;}
 }
 </style>
 </head>
 
 <body>
 
+<!-- NAVBAR WITH DASHBOARD BUTTON -->
 <div class="navbar">
     <div class="logo">Courier Admin</div>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="nav-buttons">
+        <a href="dashboard.php" class="btn dashboard">Dashboard</a>
+        <a href="../logout.php" class="btn logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">
+
 <h2 style="text-align:center;margin-bottom:20px;">All Couriers</h2>
+
+<form method="GET" class="search-box">
+<input type="text" name="search" placeholder="Search by ID, Sender, Receiver or Email..." value="<?= htmlspecialchars($search) ?>">
+<button type="submit">Search</button>
+</form>
 
 <table>
 <thead>
@@ -141,27 +193,27 @@ a.button{
 
 <tbody>
 <?php if ($result->num_rows > 0): ?>
-    <?php while($row = $result->fetch_assoc()): ?>
-    <tr>
-        <td data-label="ID"><?= $row['courier_id'] ?></td>
-        <td data-label="Sender"><?= htmlspecialchars($row['sender_name']) ?> (<?= htmlspecialchars($row['sender_email']) ?>)</td>
-        <td data-label="Receiver"><?= htmlspecialchars($row['receiver_name']) ?> (<?= htmlspecialchars($row['receiver_email']) ?>)</td>
-        <td data-label="From"><?= htmlspecialchars($row['from_location']) ?></td>
-        <td data-label="To"><?= htmlspecialchars($row['to_location']) ?></td>
-        <td data-label="Type"><?= htmlspecialchars($row['courier_type']) ?></td>
-        <td data-label="Status"><?= htmlspecialchars($row['status']) ?></td>
-        <td data-label="Delivery Date"><?= htmlspecialchars($row['delivery_date']) ?></td>
-        <td data-label="Agent">
-            <?= $row['agent_id'] ? htmlspecialchars($row['agent_name'] ?? '-') . " (" . htmlspecialchars($row['agent_branch']) . ")" : '-' ?>
-        </td>
-        <td data-label="Actions">
-            <a class="button" href="update_courier.php?id=<?= $row['courier_id'] ?>">Update</a>
-            <a class="button" href="delete_courier.php?id=<?= $row['courier_id'] ?>" onclick="return confirm('Are you sure you want to delete this courier?')">Delete</a>
-        </td>
-    </tr>
-    <?php endwhile; ?>
+<?php while($row = $result->fetch_assoc()): ?>
+<tr>
+<td data-label="ID"><?= $row['courier_id'] ?></td>
+<td data-label="Sender"><?= htmlspecialchars($row['sender_name']) ?> (<?= htmlspecialchars($row['sender_email']) ?>)</td>
+<td data-label="Receiver"><?= htmlspecialchars($row['receiver_name']) ?> (<?= htmlspecialchars($row['receiver_email']) ?>)</td>
+<td data-label="From"><?= htmlspecialchars($row['from_location']) ?></td>
+<td data-label="To"><?= htmlspecialchars($row['to_location']) ?></td>
+<td data-label="Type"><?= htmlspecialchars($row['courier_type']) ?></td>
+<td data-label="Status"><?= htmlspecialchars($row['status']) ?></td>
+<td data-label="Delivery Date"><?= htmlspecialchars($row['delivery_date']) ?></td>
+<td data-label="Agent">
+<?= $row['agent_id'] ? htmlspecialchars($row['agent_name'])." (".htmlspecialchars($row['agent_branch']).")" : '-' ?>
+</td>
+<td data-label="Actions">
+<a class="button" href="update_courier.php?id=<?= $row['courier_id'] ?>">Update</a>
+<a class="button" href="delete_courier.php?id=<?= $row['courier_id'] ?>" onclick="return confirm('Delete this courier?')">Delete</a>
+</td>
+</tr>
+<?php endwhile; ?>
 <?php else: ?>
-<tr><td colspan="10" class="no-data">No couriers found.</td></tr>
+<tr><td colspan="10">No couriers found.</td></tr>
 <?php endif; ?>
 </tbody>
 </table>
