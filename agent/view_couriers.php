@@ -74,9 +74,26 @@ body::after {
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
 }
-.logout {
-    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; background:linear-gradient(135deg,#ff7e5f,#feb47b);
+.nav-buttons{
+    display:flex; gap:10px;
+}
+.logout, .dashboard{
+    text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:bold; color:white;
+    transition:0.4s;
+}
+.logout{
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+.logout:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(0,0,0,0.25);
+}
+.dashboard{
+    background:linear-gradient(135deg,#ffd200,#f7971e);
+}
+.dashboard:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(0,0,0,0.25);
 }
 
 /* CONTAINER */
@@ -132,7 +149,10 @@ a.action-link:hover {color:#feb47b;}
 
 <div class="navbar">
     <div class="logo">Courier Agent</div>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="nav-buttons">
+        <a href="dashboard.php" class="dashboard">Dashboard</a>
+        <a href="../logout.php" class="logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">

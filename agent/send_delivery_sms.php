@@ -108,16 +108,26 @@ body::after {
 }
 
 /* NAVBAR */
-.navbar { display:flex; justify-content:space-between; align-items:center; padding:15px 30px; margin-bottom:30px; }
+.navbar { display:flex; justify-content:flex-end; align-items:center; padding:15px 30px; margin-bottom:30px; gap:10px; }
 .logo {
     font-size:1.5rem; font-weight:bold;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    position:absolute; left:30px;
 }
 .logout {
     color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
     font-weight:bold; background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    transition:0.3s;
 }
+.logout:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+
+.dashboard-btn {
+    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
+    font-weight:bold; background:linear-gradient(135deg,#fddb6d,#fcb045);
+    transition:0.3s;
+}
+.dashboard-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
 
 /* CONTAINER */
 .container {
@@ -195,6 +205,7 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
 
 <div class="navbar">
     <div class="logo">Courier Agent</div>
+    <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
     <a href="../logout.php" class="logout">Logout</a>
 </div>
 

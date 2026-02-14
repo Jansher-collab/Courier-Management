@@ -79,21 +79,21 @@ if(isset($_POST['assign'])){
             $courier_info = $stmt_email->get_result()->fetch_assoc();
 
             $subject = "Courier Assigned by Agent";
-            $body = "
-                <h3>Courier Assigned</h3>
-                <p><b>Tracking Number:</b> {$courier_info['tracking_number']}</p>
-                <p><b>From:</b> $branch</p>
-                <p><b>To:</b> $to_location</p>
-                <p><b>Courier Type:</b> $courier_type</p>
-                <p><b>Delivery Date:</b> $delivery_date</p>
-                <p>Status: booked</p>
-            ";
+
+            // PLAIN TEXT EMAIL
+            $body = "Courier Assigned\n";
+            $body .= "Tracking Number: {$courier_info['tracking_number']}\n";
+            $body .= "From: $branch\n";
+            $body .= "To: $to_location\n";
+            $body .= "Courier Type: $courier_type\n";
+            $body .= "Delivery Date: $delivery_date\n";
+            $body .= "Status: booked\n";
 
             if(!empty($courier_info['sender_email']))
-                send_mail($courier_info['sender_email'], $subject, $body);
+                send_mail($courier_info['sender_email'], $subject, $body, false);
 
             if(!empty($courier_info['receiver_email']))
-                send_mail($courier_info['receiver_email'], $subject, $body);
+                send_mail($courier_info['receiver_email'], $subject, $body, false);
 
             $success = "Courier assigned successfully! Tracking Number: {$courier_info['tracking_number']}";
 
@@ -112,17 +112,16 @@ if(isset($_POST['assign'])){
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html, body{height:100%;width:100%;overflow-x:hidden;scrollbar-width:none;}
+body::-webkit-scrollbar{width:0; background:transparent;}
 
 body{
 background:url('../assets/agent-add-courier.jpg') center/cover no-repeat fixed;
+position:relative;
 }
-
 body::after{
-content:'';
-position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.45);
-z-index:-1;
+content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.45);z-index:-1;
 }
 
 .navbar{
@@ -130,21 +129,41 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
+position:sticky;
+top:0; z-index:999;
 }
 
 .logo{
-font-size:1.4rem;
-font-weight:bold;
-color:white;
+font-size:1.4rem;font-weight:bold;color:#ff7e5f;
 }
 
-.logout{
+.nav-buttons{
+display:flex; gap:10px;
+}
+
+.logout, .dashboard{
 text-decoration:none;
 padding:10px 20px;
 border-radius:10px;
 font-weight:bold;
 color:white;
+transition:0.4s;
+}
+
+.logout{
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+.logout:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 20px rgba(0,0,0,0.25);
+}
+
+.dashboard{
+background:linear-gradient(135deg,#ffd200,#f7971e);
+}
+.dashboard:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 20px rgba(0,0,0,0.25);
 }
 
 .container{
@@ -183,6 +202,10 @@ background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:white;
 font-weight:bold;
 cursor:pointer;
+width:auto; /* fixed width */
+padding:12px 30px; /* shorter than full width */
+display:block;
+margin:10px auto 0 auto;
 }
 
 button:hover{
@@ -254,7 +277,10 @@ font-size:.95rem;
 
 <div class="navbar">
 <div class="logo">Courier Agent</div>
+<div class="nav-buttons">
+<a href="dashboard.php" class="dashboard">Dashboard</a>
 <a href="../logout.php" class="logout">Logout</a>
+</div>
 </div>
 
 <div class="container">
@@ -312,10 +338,7 @@ const search=dropdown.querySelector('.dropdown-search');
 const items=dropdown.querySelectorAll('.dropdown-item');
 const preview=document.getElementById('previewBox');
 
-btn.onclick=()=>{
-panel.style.display=panel.style.display==='block'?'none':'block';
-btn.classList.toggle('active');
-};
+btn.onclick=()=>{panel.style.display=panel.style.display==='block'?'none':'block';btn.classList.toggle('active');};
 
 items.forEach(item=>{
 item.onclick=()=>{
@@ -330,16 +353,11 @@ btn.classList.remove('active');
 
 search.onkeyup=()=>{
 const val=search.value.toLowerCase();
-items.forEach(i=>{
-i.style.display=i.textContent.toLowerCase().includes(val)?'block':'none';
-});
+items.forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(val)?'block':'none';});
 };
 
 document.addEventListener('click',e=>{
-if(!dropdown.contains(e.target)){
-panel.style.display='none';
-btn.classList.remove('active');
-}
+if(!dropdown.contains(e.target)){panel.style.display='none';btn.classList.remove('active');}
 });
 </script>
 </body>

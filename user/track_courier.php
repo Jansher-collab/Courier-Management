@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 include('../includes/db.php');
 
@@ -76,8 +76,29 @@ body{
     margin-bottom:30px;
 }
 .logo{font-size:1.4rem;font-weight:bold;background:linear-gradient(135deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.logout{color:white;text-decoration:none;font-weight:bold;padding:10px 20px;border-radius:10px;background:linear-gradient(135deg,#ff7e5f,#feb47b);transition:0.3s;}
-.logout:hover{transform:translateY(-2px);box-shadow:0 0 15px rgba(255,126,95,0.7),0 0 25px rgba(255,126,95,0.5);}
+.nav-buttons{display:flex; gap:10px;}
+.logout, .dashboard-btn{
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+    padding:10px 20px;
+    border-radius:10px;
+    transition:0.3s;
+}
+.logout{
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+.logout:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 15px rgba(255,126,95,0.7),0 0 25px rgba(255,126,95,0.5);
+}
+.dashboard-btn{
+    background:linear-gradient(135deg,#fddb6d,#fcb045);
+}
+.dashboard-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 15px rgba(255,200,90,0.7),0 0 25px rgba(255,180,70,0.5);
+}
 
 /* HERO */
 .hero{
@@ -153,6 +174,20 @@ body{
 }
 .courier-card h3{margin-bottom:15px;color:#ff7e5f;}
 .courier-card p{margin-bottom:8px;color:#333;}
+.courier-card .action-links{margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;}
+.courier-card .action-links a{
+    padding:10px 18px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    transition:0.3s;
+}
+.courier-card .action-links a:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 15px rgba(255,126,95,0.6),0 0 30px rgba(255,126,95,0.4);
+}
 
 /* LOGS TABLE */
 .logs-table{width:100%;border-collapse:collapse;margin-top:20px;}
@@ -181,7 +216,10 @@ body{
 
 <div class="navbar">
     <div class="logo">Courier Portal</div>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="nav-buttons">
+        <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
+        <a href="../logout.php" class="logout">Logout</a>
+    </div>
 </div>
 
 <div class="hero">
@@ -209,6 +247,12 @@ body{
     <p><b>Delivery Date:</b> <?= htmlspecialchars($courier_info['delivery_date']) ?></p>
     <p><b>Sender:</b> <?= htmlspecialchars($courier_info['sender_name']) ?> (<?= htmlspecialchars($courier_info['sender_email']) ?>)</p>
     <p><b>Receiver:</b> <?= htmlspecialchars($courier_info['receiver_name']) ?> (<?= htmlspecialchars($courier_info['receiver_email']) ?>)</p>
+
+    <!-- Action Links for Status and Print -->
+    <div class="action-links">
+        <a href="view_status.php?courier_id=<?= $courier_info['courier_id'] ?>">View Status</a>
+        <a href="print_status.php?courier_id=<?= $courier_info['courier_id'] ?>" target="_blank">Print Status</a>
+    </div>
 
     <?php if ($logs): ?>
         <h3>Courier Logs</h3>
