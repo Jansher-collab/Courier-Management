@@ -38,59 +38,117 @@ if($courier_id > 0){
 <title>Courier Status</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-body{background:#f4f7fb;color:#333;padding:0;margin:0;}
-a{text-decoration:none;}
+body{
+    background: url('../assets/user-track-courier.jpg') center/cover no-repeat fixed;
+    padding:20px;
+    min-height:100vh;
+}
 
 /* NAVBAR */
 .navbar{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:15px 25px;background:white;box-shadow:0 4px 12px rgba(0,0,0,0.08);flex-wrap:wrap;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(255,255,255,0.85);
+    backdrop-filter:blur(10px);
+    padding:15px 25px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    border-radius:12px;
+    flex-wrap:wrap;
+    margin-bottom:30px;
 }
-.navbar .logo{
-    font-size:1.4rem;font-weight:bold;
+.logo{
+    font-size:1.4rem;
+    font-weight:bold;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
-.navbar .logout{
-    padding:10px 20px;border-radius:10px;font-weight:bold;color:white;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);transition:0.3s;
+.nav-buttons{
+    display:flex;
+    gap:10px;
 }
-.navbar .logout:hover{
+.logout, .dashboard-btn{
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+    padding:10px 20px;
+    border-radius:10px;
+    transition:0.3s;
+}
+.logout{
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+.logout:hover{
     transform:translateY(-2px);
     box-shadow:0 0 15px rgba(255,126,95,0.7),0 0 25px rgba(255,126,95,0.5);
+}
+.dashboard-btn{
+    background:linear-gradient(135deg,#fddb6d,#fcb045);
+}
+.dashboard-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 15px rgba(255,200,90,0.7),0 0 25px rgba(255,180,70,0.5);
 }
 
 /* CONTAINER */
 .container{
-    max-width:750px;margin:30px auto;background:white;padding:25px 30px;border-radius:15px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.1);text-align:center;
+    max-width:800px;
+    margin:0 auto;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(10px);
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,0.1);
 }
 
-/* HEADINGS & TEXT */
-h2{font-size:26px;color:#ff7e5f;margin-bottom:25px;}
-p{font-size:16px;line-height:1.6;margin-bottom:12px;}
-label{font-weight:bold;color:#555;}
-.status{color:black;font-weight:bold;}
+/* HEADINGS */
+h2{
+    font-size:clamp(22px,2.5vw,28px);
+    color:#ff7e5f;
+    margin-bottom:20px;
+    text-align:center;
+}
+p{
+    margin-bottom:12px;
+    font-size:1rem;
+    color:#333;
+    line-height:1.5;
+}
+label{
+    font-weight:bold;
+}
+.status{
+    color:black;
+    font-weight:bold;
+}
 
 /* PRINT BUTTON */
 .print-btn{
-    display:inline-block;margin-top:20px;padding:12px 25px;border:none;border-radius:10px;
-    font-weight:bold;background:linear-gradient(135deg,#ff7e5f,#feb47b);color:white;cursor:pointer;transition:0.3s;
+    display:inline-block;
+    margin-top:20px;
+    padding:12px 25px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#ff7e5f,#feb47b);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
 }
 .print-btn:hover{
     transform:translateY(-2px);
-    box-shadow:0 0 15px rgba(255,126,95,0.6), 0 0 25px rgba(255,126,95,0.4);
+    box-shadow:0 0 15px rgba(255,126,95,0.6),0 0 30px rgba(255,126,95,0.4);
 }
 
-/* RESPONSIVE */
-@media(max-width:600px){
-    .container{padding:20px 15px;margin:20px 10px;}
-    h2{font-size:22px;}
-    p{font-size:14px;}
-}
+/* PRINT MODE */
 @media print{
     .navbar{display:none;}
-    .container{box-shadow:none;border:none;padding:0;}
+    .print-btn{display:none;}
+    .container{
+        box-shadow:none;
+        border:none;
+    }
 }
 </style>
 </head>
@@ -98,7 +156,10 @@ label{font-weight:bold;color:#555;}
 
 <div class="navbar">
     <div class="logo">Courier Portal</div>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="nav-buttons">
+        <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
+        <a href="../logout.php" class="logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">
@@ -111,9 +172,12 @@ label{font-weight:bold;color:#555;}
         <p><label>To:</label> <?= htmlspecialchars($data['to_location']) ?></p>
         <p><label>Status:</label> <span class="status"><?= htmlspecialchars($data['status']) ?></span></p>
         <p><label>Delivery Date:</label> <?= htmlspecialchars($data['delivery_date']) ?></p>
+
         <button class="print-btn" onclick="window.print()">Print This Page</button>
     <?php else: ?>
-        <p style="text-align:center;color:#e74c3c;font-weight:bold;">No courier found. Please enter a valid tracking number.</p>
+        <p style="text-align:center;color:#e74c3c;font-weight:bold;">
+            No courier found. Please enter a valid tracking number.
+        </p>
     <?php endif; ?>
 </div>
 
