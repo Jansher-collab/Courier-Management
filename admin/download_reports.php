@@ -11,7 +11,7 @@ if (!is_dir($reports_dir)) {
     mkdir($reports_dir, 0755, true);
 }
 
-// Get filters
+// Get filters (if any)
 $from_date = $_GET['from_date'] ?? '';
 $to_date   = $_GET['to_date'] ?? '';
 $branch    = $_GET['branch'] ?? '';
@@ -34,18 +34,20 @@ $query = "
 $params = [];
 $types  = "";
 
-// Filters
-if ($from_date !== '') {
+// Apply filters if provided
+if (!empty($from_date)) {
     $query .= " AND c.delivery_date >= ?";
     $params[] = $from_date;
     $types   .= "s";
 }
-if ($to_date !== '') {
+
+if (!empty($to_date)) {
     $query .= " AND c.delivery_date <= ?";
     $params[] = $to_date;
     $types   .= "s";
 }
-if ($branch !== '') {
+
+if (!empty($branch)) {
     $query .= " AND a.branch = ?";
     $params[] = $branch;
     $types   .= "s";
@@ -65,12 +67,12 @@ if (!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// CSV file
+// Create CSV file
 $filename = 'courier_report_' . date('Ymd_His') . '.csv';
 $filepath = $reports_dir . $filename;
 $output = fopen($filepath, 'w');
 
-// Headers
+// CSV Headers
 fputcsv($output, [
     'Courier ID','Sender ID','Sender Name','Sender Email',
     'Receiver ID','Receiver Name','Receiver Email',
@@ -79,7 +81,7 @@ fputcsv($output, [
     'Created At','Updated At'
 ]);
 
-// Data rows
+// CSV Data
 while ($row = $result->fetch_assoc()) {
     fputcsv($output, [
         $row['courier_id'],
@@ -104,31 +106,60 @@ while ($row = $result->fetch_assoc()) {
 
 fclose($output);
 
-// Log report
-$report_type    = 'courier';
-$generated_by   = $_SESSION['user_id'];
-$from_date_param = $from_date ?: null;
-$to_date_param   = $to_date ?: null;
-$branch_param    = $branch ?: null;
-$file_path_db    = 'reports/' . $filename; // relative path for DB
+/* ===============================
+   REPORT LOGGING (NO NULL VALUES)
+   =============================== */
+
+$generated_by = $_SESSION['user_id'];
+
+// If no dates selected, fetch full date range from couriers table
+if (empty($from_date) || empty($to_date)) {
+
+    $date_query = $conn->query("
+        SELECT MIN(delivery_date) AS min_date,
+               MAX(delivery_date) AS max_date
+        FROM couriers
+    ");
+
+    $date_range = $date_query->fetch_assoc();
+
+    $from_date = $date_range['min_date'] ?? date('Y-m-d');
+    $to_date   = $date_range['max_date'] ?? date('Y-m-d');
+}
+
+// If no branch selected, set to 'All'
+if (empty($branch)) {
+    $branch = 'All';
+}
+
+// Determine report type
+$report_type = 'date-wise'; // Always valid enum value
+
+$file_path_db = 'reports/' . $filename;
 
 $report_stmt = $conn->prepare("
     INSERT INTO reports
     (report_type, generated_by, from_date, to_date, branch, file_path, created_at)
     VALUES (?, ?, ?, ?, ?, ?, NOW())
 ");
+
 $report_stmt->bind_param(
     "sissss",
     $report_type,
     $generated_by,
-    $from_date_param,
-    $to_date_param,
-    $branch_param,
+    $from_date,
+    $to_date,
+    $branch,
     $file_path_db
 );
+
 $report_stmt->execute();
 
-// Serve CSV
+if ($report_stmt->error) {
+    die("Insert failed: " . $report_stmt->error);
+}
+
+// Serve CSV to browser
 if (file_exists($filepath)) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="' . $filename . '"');

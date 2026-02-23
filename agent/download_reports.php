@@ -26,12 +26,21 @@ if ($role === 'agent' && !$agent_id) {
     $_SESSION['branch']   = $agent['branch'];
 }
 
-// Build query for agent
-$where = "WHERE c.agent_id = ?";
-$params = [$agent_id];
-$types  = "i";
+// Determine from_date and to_date for this agent
+$date_query = $conn->prepare("
+    SELECT MIN(delivery_date) AS min_date, MAX(delivery_date) AS max_date
+    FROM couriers
+    WHERE agent_id = ?
+");
+$date_query->bind_param("i", $agent_id);
+$date_query->execute();
+$date_res = $date_query->get_result()->fetch_assoc();
 
-// Query
+$from_date_db = $date_res['min_date'] ?? date('Y-m-d');
+$to_date_db   = $date_res['max_date'] ?? date('Y-m-d');
+$branch_db    = $_SESSION['branch'] ?? 'All';
+
+// Build query for agent couriers
 $sql = "
 SELECT 
     c.courier_id,
@@ -49,12 +58,12 @@ JOIN customers s ON c.sender_id = s.customer_id
 JOIN customers r ON c.receiver_id = r.customer_id
 LEFT JOIN users u ON c.created_by = u.user_id
 LEFT JOIN agents a ON c.agent_id = a.agent_id
-$where
+WHERE c.agent_id = ?
 ORDER BY c.courier_id ASC
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
+$stmt->bind_param("i", $agent_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -70,6 +79,7 @@ fputcsv($output, [
     'Courier ID','Sender','Receiver','From','To','Type','Status','Delivery Date','Created By','Agent Branch'
 ]);
 
+// CSV data
 while ($row = $result->fetch_assoc()) {
     fputcsv($output, [
         $row['courier_id'],
@@ -87,13 +97,16 @@ while ($row = $result->fetch_assoc()) {
 
 fclose($output);
 
-// Insert into reports table
-$report_type      = 'courier';
-$generated_by     = $_SESSION['user_id'];
-$from_date_db     = null;
-$to_date_db       = null;
-$branch_db        = $_SESSION['branch'] ?? 'Unassigned';
-$file_path_db     = 'reports/' . $filename;
+// Log report in DB
+$generated_by = $user_id;
+
+// Determine report_type enum
+$report_type = 'date-wise'; // default
+if (!empty($branch_db) && $branch_db !== 'All') {
+    $report_type = 'city-wise';
+}
+
+$file_path_db = 'reports/' . $filename;
 
 $report_stmt = $conn->prepare("
     INSERT INTO reports
@@ -110,6 +123,10 @@ $report_stmt->bind_param(
     $file_path_db
 );
 $report_stmt->execute();
+
+if ($report_stmt->error) {
+    die("Insert failed: " . $report_stmt->error);
+}
 
 // Serve CSV
 if (file_exists($filepath)) {

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Courier Management System</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html, body{overflow-x:hidden; scroll-behavior:smooth;}
+::-webkit-scrollbar{width:0;height:0;}
+body{-ms-overflow-style:none;scrollbar-width:none;background:linear-gradient(135deg,#f8fbff,#eaf2fb);color:#333;}
+
+/* NAVBAR */
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:14px 5%;background:white;box-shadow:0 4px 15px rgba(0,0,0,0.05);position:sticky;top:0;z-index:1000;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo img{max-height:55px;width:auto;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.logo span{font-size:1.2rem;font-weight:bold;color:#ff7e5f;}
+.nav-links{display:flex;align-items:center;gap:25px;}
+.nav-links a{text-decoration:none;color:#444;font-weight:500;transition:0.3s;}
+.nav-links a:hover{color:#ff7e5f;}
+.btn{padding:10px 20px;border-radius:25px;background:linear-gradient(135deg,#ff7e5f,#feb47b);color:white;font-weight:bold;display:inline-block;transition:0.3s;text-decoration:none;border:none;box-shadow:0 0 15px rgba(255,126,95,0.4);}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 25px rgba(255,126,95,0.6);}
+.hamburger{display:none;font-size:24px;cursor:pointer;color:#ff7e5f;}
+@media(max-width:768px){.hamburger{display:block;}.nav-links{position:absolute;top:60px;right:5%;flex-direction:column;background:white;width:220px;padding:25px;gap:20px;box-shadow:0 10px 25px rgba(0,0,0,0.08);border-radius:12px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:0.3s ease;}.navbar:hover .nav-links{opacity:1;visibility:visible;transform:translateY(0);}}
+
+/* HERO */
+.hero{display:flex;align-items:center;justify-content:space-between;padding:100px 5%;flex-wrap:wrap;gap:50px;}
+.hero-text{flex:1;min-width:280px;}
+.hero-text h1{font-size:clamp(28px,5vw,50px);margin-bottom:20px;color:#2c3e50;text-shadow:0 0 15px rgba(255,126,95,0.6);}
+.hero-text p{margin-bottom:30px;font-size:16px;color:#555;}
+.hero-img{flex:1;display:flex;justify-content:center;align-items:center;min-width:280px;}
+.hero-img img{width:100%;max-width:400px;height:auto;border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;box-shadow:0 20px 40px rgba(0,0,0,0.1);transition:0.4s ease;object-fit:cover;}
+.hero-img img:hover{transform:scale(1.05) rotate(2deg);box-shadow:0 25px 50px rgba(255,126,95,0.4);}
+@media(max-width:768px){.hero{flex-direction:column;text-align:center;padding:60px 5%;gap:30px;}.hero-img img{max-width:280px;width:100%;}}
+
+/* SECTIONS */
+.section{padding:80px 5%;text-align:center;}
+.section h2{font-size:28px;margin-bottom:40px;color:#2c3e50;text-shadow:0 0 10px rgba(255,126,95,0.3);}
+.card-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:25px;}
+.card{background:white;padding:25px;border-radius:18px;box-shadow:0 10px 25px rgba(0,0,0,0.05);transition:0.4s;cursor:pointer;text-align:center;}
+.card img{width:200px;height:200px;margin-bottom:15px;border-radius:50%;transition:0.3s;}
+.card img:hover{transform:scale(1.1);filter:drop-shadow(0 0 20px rgba(255,126,95,0.7));}
+.card h4{margin-bottom:10px;color:#2c3e50;}
+.card p{font-size:15px;color:#555;}
+.card:hover{transform:translateY(-8px);box-shadow:0 0 35px rgba(255,126,95,0.5);}
+
+/* WORKFLOW / STEPS */
+.steps-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:30px;margin-top:40px;}
+.step-card{background:white;padding:25px;border-radius:18px;box-shadow:0 10px 20px rgba(0,0,0,0.08);transition:0.4s;text-align:center;}
+.step-card img{width:160px;height:160px;margin-bottom:15px;border-radius:50%;transition:0.3s;}
+.step-card img:hover{transform:scale(1.15);filter:drop-shadow(0 0 20px rgba(255,126,95,0.6));}
+.step-card h4{margin-bottom:10px;color:#2c3e50;}
+.step-card p{font-size:14px;color:#555;}
+.step-card:hover{transform:translateY(-6px);box-shadow:0 0 30px rgba(255,126,95,0.4);}
+
+/* FOOTER */
+.footer{background:#ffffff;padding:60px 5%;border-top:1px solid #eee;}
+.footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:25px;}
+.footer h3{margin-bottom:15px;color:#2c3e50;}
+.footer a{display:block;text-decoration:none;color:#666;margin-bottom:8px;}
+.social-icons a{display:inline-block;margin-right:12px;font-size:20px;color:#ff7e5f;}
+.footer-bottom{text-align:center;margin-top:30px;font-size:14px;color:#888;}
+.footer a:hover{color:#ff7e5f;text-shadow:0 0 10px rgba(255,126,95,0.6);}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">
+        <img src="assets/logo.png" alt="Logo">
+        <span>Courier System</span>
+    </div>
+    <div class="hamburger"><i class="fas fa-bars"></i></div>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="features.html">Features</a>
+        <a href="login.php" class="btn">Login</a>
+    </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-text">
+        <h1>Smart Courier Management Platform</h1>
+        <p>Streamline shipments, manage agents, monitor delivery status, and generate reports in one secure system.</p>
+        <a href="login.php" class="btn">Access System</a>
+    </div>
+    <div class="hero-img">
+        <img src="assets/index.jpg" alt="Courier Illustration">
+    </div>
+</section>
+
+<!-- SYSTEM HIGHLIGHTS -->
+<section class="section">
+    <h2>System Highlights</h2>
+    <div class="card-container">
+        <div class="card">
+            <img src="assets/security.jpg" alt="Secure Access">
+            <h4>Secure Access</h4>
+            <p>Role-based login authentication for admin, agents, and users.</p>
+        </div>
+        <div class="card">
+            <img src="assets/trackingg.jpg" alt="Shipment Tracking">
+            <h4>Shipment Tracking</h4>
+            <p>Monitor all deliveries in real-time with live status updates.</p>
+        </div>
+        <div class="card">
+            <img src="assets/report.jpg" alt="Reports">
+            <h4>Reports & Analytics</h4>
+            <p>Generate detailed shipment reports with just a click.</p>
+        </div>
+        <div class="card">
+            <img src="assets/email.jpg" alt="Email Alerts">
+            <h4>Email Alerts</h4>
+            <p>Automatic notifications for customers and agents.</p>
+        </div>
+        <div class="card">
+            <img src="assets/mobile.jpg" alt="Mobile Friendly">
+            <h4>Mobile-Friendly</h4>
+            <p>Manage shipments on-the-go with mobile-ready dashboard.</p>
+        </div>
+        <div class="card">
+            <img src="assets/support.jpg" alt="Customer Support">
+            <h4>24/7 Support</h4>
+            <p>Round-the-clock help for any courier or system issues.</p>
+        </div>
+        <div class="card">
+            <img src="assets/integration.jpg" alt="Easy Integration">
+            <h4>Easy Integration</h4>
+            <p>Seamlessly integrates with existing systems and APIs.</p>
+        </div>
+        <div class="card">
+            <img src="assets/upgrade.jpg" alt="Future Proof">
+            <h4>Future-Proof</h4>
+            <p>Scalable system designed to grow with your business.</p>
+        </div>
+    </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<section class="section">
+    <h2>Why Choose Our System?</h2>
+    <div class="card-container">
+        <div class="card">
+            <img src="assets/speed.jpg" alt="Fast Processing">
+            <h4>Fast Processing</h4>
+            <p>Optimized workflow ensures quick shipment handling.</p>
+        </div>
+        <div class="card">
+            <img src="assets/secure.jpg" alt="Secure">
+            <h4>Secure & Reliable</h4>
+            <p>All data and shipments are protected with high-level security.</p>
+        </div>
+        <div class="card">
+            <img src="assets/analytics.jpg" alt="Analytics">
+            <h4>Comprehensive Analytics</h4>
+            <p>Visualize data trends and monitor performance.</p>
+        </div>
+        <div class="card">
+            <img src="assets/team.jpg" alt="Expert Team">
+            <h4>Expert Team</h4>
+            <p>Our team ensures smooth operations and user support.</p>
+        </div>
+        <div class="card">
+            <img src="assets/puzzle.jpg" alt="Integration">
+            <h4>Easy Integration</h4>
+            <p>Integrate easily with existing systems and APIs.</p>
+        </div>
+        <div class="card">
+            <img src="assets/future.jpg" alt="Future Proof">
+            <h4>Future-Proof</h4>
+            <p>Scalable platform designed for growth and updates.</p>
+        </div>
+        <div class="card">
+            <img src="assets/headset.jpg" alt="Customer Support">
+            <h4>24/7 Support</h4>
+            <p>Dedicated team available anytime for assistance.</p>
+        </div>
+        <div class="card">
+            <img src="assets/customize.jpg" alt="Customizable">
+            <h4>Highly Customizable</h4>
+            <p>Adaptable settings and workflows tailored to your business.</p>
+        </div>
+    </div>
+</section>
+
+<!-- WORKFLOW / HOW IT WORKS -->
+<section class="section">
+    <h2>How It Works</h2>
+    <div class="steps-container">
+        <div class="step-card">
+            <img src="assets/registration.jpg" alt="Register">
+            <h4>1. Register</h4>
+            <p>Create an account and fill in your profile details.</p>
+        </div>
+        <div class="step-card">
+            <img src="assets/add-courier.avif" alt="Add Courier">
+            <h4>2. Add Courier</h4>
+            <p>Fill shipment information for pickup and delivery.</p>
+        </div>
+        <div class="step-card">
+            <img src="assets/track.jpg" alt="Track">
+            <h4>3. Track</h4>
+            <p>Monitor the courier in real-time on the dashboard.</p>
+        </div>
+        <div class="step-card">
+            <img src="assets/reporting.jpg" alt="Reports">
+            <h4>4. Reports</h4>
+            <p>Generate detailed reports and insights instantly.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+    <h2>Get Started Today</h2>
+    <p>Join hundreds of businesses and individuals who trust our courier management platform.</p>
+    <a href="login.php" class="btn">Access the System</a>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+    <div class="footer-grid">
+        <div>
+            <h3>Courier System</h3>
+            <p>Modern web-based courier management solution.</p>
+        </div>
+        <div>
+            <h3>Pages</h3>
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="features.html">Features</a>
+            <a href="login.php">Login</a>
+        </div>
+        <div>
+            <h3>Connect</h3>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        © 2026 Courier Management System
+    </div>
+</div>
+
+</body>
+</html>

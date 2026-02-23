@@ -56,66 +56,68 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <title>User Registration</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-body, html{height:100%; width:100%; background:#f4f7fb; display:flex; align-items:center; justify-content:center;}
-body{
-    background:url('../assets/user-register.jpg') center/cover no-repeat fixed;
-    display:flex; justify-content:center; align-items:center;
-    position:relative;
-}
+body{background:#f4f7fb url('../assets/user-register.jpg') center/cover no-repeat fixed;}
 .container{
-    width:100%; max-width:450px; padding:35px;
-    background:rgba(255,255,255,0.95); border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.15); backdrop-filter:blur(10px);
-    animation:fadeIn 0.8s ease;
+    width:90%; max-width:380px;
+    padding:20px 18px;
+    margin:30px auto;
+    background:rgba(255,255,255,0.95);
+    border-radius:16px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.12);
+    backdrop-filter:blur(8px);
 }
 
 .container h2{
-    text-align:center; margin-bottom:25px;
-    font-size:1.8rem;
+    text-align:center;
+    margin-bottom:16px;
+    font-size:1.7rem;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
 }
 
-.input-group{margin-bottom:18px; position:relative;}
+.input-group{margin-bottom:10px; position:relative;} /* reduced spacing */
 .input-group input{
-    width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;
-    font-size:1rem; outline:none; transition:0.3s;
+    width:100%;
+    padding:10px; /* slightly reduced */
+    border-radius:10px;
+    border:1px solid #ccc;
+    font-size:0.95rem;
+    outline:none;
+    transition:0.3s;
 }
 .input-group input:focus{
-    box-shadow:0 0 10px rgba(255,126,95,0.6), 0 0 20px rgba(255,126,95,0.3);
+    box-shadow:0 0 8px rgba(255,126,95,0.6),0 0 15px rgba(255,126,95,0.3);
     border-color:#ff7e5f;
 }
 
 /* Validation message */
-.validation-msg{font-size:0.85rem; margin-top:5px; height:18px;}
+.validation-msg{font-size:0.8rem; margin-top:3px; height:16px;}
 .validation-msg.valid{color:#27ae60;}
 .validation-msg.invalid{color:#e74c3c;}
 
 /* BUTTON */
 button{
-    width:100%; padding:14px; border:none; border-radius:12px;
-    font-weight:bold; font-size:1rem; color:white; cursor:pointer;
+    width:100%; padding:10px; border:none; border-radius:10px;
+    font-weight:bold; font-size:0.95rem; color:white; cursor:pointer;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
     transition:0.4s;
 }
 button:hover{
-    transform:translateY(-2px); box-shadow:0 0 15px rgba(255,126,95,0.6),0 0 30px rgba(255,126,95,0.4);
+    transform:translateY(-1px);
+    box-shadow:0 0 12px rgba(255,126,95,0.6),0 0 25px rgba(255,126,95,0.4);
 }
 
 /* MESSAGES */
-.message{margin-bottom:15px; text-align:center; font-weight:bold;}
+.message{margin-bottom:10px; text-align:center; font-weight:bold;}
 .error{color:#e74c3c;}
 .success{color:#27ae60;}
 
 /* RESPONSIVE */
 @media(max-width:500px){
-    .container{padding:25px; margin:10px;}
-    button, .input-group input{font-size:0.95rem; padding:12px;}
+    .container{padding:15px 12px; margin:15px auto;}
+    button, .input-group input{font-size:0.9rem; padding:8px;}
 }
-
-/* ANIMATION */
-@keyframes fadeIn{from{opacity:0; transform:translateY(20px);}to{opacity:1; transform:translateY(0);}}
 </style>
 </head>
 <body>
