@@ -74,6 +74,13 @@ body::-webkit-scrollbar{display:none;}
 width:95%;max-width:700px;margin:50px auto;background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:20px;padding:30px;color:#fff;
 }
 
+/* Success message style */
+.success-msg{
+color:#00ff88;
+font-weight:bold;
+margin-bottom:15px;
+}
+
 form{display:flex;flex-direction:column;gap:15px;}
 
 input,textarea{
@@ -172,7 +179,16 @@ border:1px solid #ff7e5f;
 <div class="container">
 
 <h2>Send Email to Customer</h2>
-<?php if($message_sent) echo "<p>$message_sent</p>"; ?>
+
+<?php 
+if($message_sent){
+    if(strpos($message_sent,'successfully') !== false){
+        echo "<p class='success-msg'>$message_sent</p>";
+    } else {
+        echo "<p>$message_sent</p>";
+    }
+}
+?>
 
 <div class="dropdown-wrapper">
 <label>Select Courier:</label>

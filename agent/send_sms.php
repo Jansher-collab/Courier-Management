@@ -4,7 +4,6 @@ include '../includes/db.php';
 include '../includes/functions.php';
 include '../includes/mail.php'; // PHPMailer setup
 
-// Ensure agent is logged in
 if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent'){
     header("Location: login.php");
     exit();
@@ -13,7 +12,6 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent'){
 $agent_id = $_SESSION['agent_id'];
 $message_sent = '';
 
-// Fetch all couriers assigned to this agent
 $stmt = $conn->prepare("
     SELECT c.courier_id, r.name AS receiver_name, r.email AS receiver_email
     FROM couriers c
@@ -24,19 +22,16 @@ $stmt->bind_param("i", $agent_id);
 $stmt->execute();
 $couriers_result = $stmt->get_result();
 
-// Store results in an array
 $couriers = [];
 while($row = $couriers_result->fetch_assoc()){
     $couriers[] = $row;
 }
 
-// Initialize form fields safely
 $selected_courier_id = $_POST['courier_id'] ?? '';
 $to_email = $_POST['to_email'] ?? '';
 $subject = $_POST['subject'] ?? 'Courier Notification';
 $body = $_POST['message'] ?? 'Type your message here';
 
-// Fetch courier data if selected
 if(!empty($selected_courier_id)){
     $stmt_c = $conn->prepare("
         SELECT r.name, r.email 
@@ -53,12 +48,11 @@ if(!empty($selected_courier_id)){
     }
 }
 
-// Send email if form submitted
 if(isset($_POST['send_email'])){
     $courier_id = $_POST['courier_id'] ?? null;
     $to = $_POST['to_email'];
     $subject = $_POST['subject'];
-    $body = strip_tags($_POST['message']); // remove HTML tags for plain text email
+    $body = strip_tags($_POST['message']);
 
     if(send_mail($to, $subject, $body)){
         $message_sent = "Email sent successfully to $to";
@@ -85,113 +79,55 @@ if(isset($_POST['send_email'])){
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Send Email to Customer</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-
-/* HIDE SCROLLBAR */
-html, body { height:100%; overflow:hidden; }
-.scroll-wrapper { height:100vh; overflow:auto; -ms-overflow-style:none; scrollbar-width:none; }
-.scroll-wrapper::-webkit-scrollbar { display:none; }
-
-/* BACKGROUND */
-body {
-    background: url('../assets/agent-send-sms.jpg') center/cover no-repeat fixed;
-    position: relative;
-}
-body::after {
-    content:''; position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.35); z-index:-1;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html,body{height:100%;overflow:hidden;}
+.scroll-wrapper{height:100vh;overflow:auto;-ms-overflow-style:none;scrollbar-width:none;}
+.scroll-wrapper::-webkit-scrollbar{display:none;}
+body{background:url('../assets/agent-send-sms.jpg') center/cover no-repeat fixed;position:relative;}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:-1;}
 
 /* NAVBAR */
-.navbar { display:flex; justify-content:flex-end; align-items:center; padding:15px 30px; margin-bottom:30px; gap:10px; }
-.logo {
-    font-size:1.5rem; font-weight:bold;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    position:absolute; left:30px;
-}
-.logout {
-    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    transition:0.3s;
-}
-.logout:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
-
-.dashboard-btn {
-    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; background:linear-gradient(135deg,#fddb6d,#fcb045);
-    transition:0.3s;
-}
-.dashboard-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;margin-bottom:30px;position:relative;}
+.logo{font-size:1.5rem;font-weight:bold;background:linear-gradient(135deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.navbar-buttons{display:flex;gap:10px;}
+.logout,.dashboard-btn{color:white;text-decoration:none;padding:12px 25px;border-radius:10px;font-weight:bold;transition:0.3s;}
+.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+.dashboard-btn{background:linear-gradient(135deg,#fddb6d,#fcb045);}
+.logout:hover,.dashboard-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
 
 /* CONTAINER */
-.container {
-    max-width:600px; margin:0 auto 50px auto;
-    background:#fff; padding:25px; border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
+.container{max-width:600px;margin:0 auto 50px auto;background:#fff;padding:25px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);}
+h2{text-align:center;margin-bottom:25px;font-size:1.8rem;background:linear-gradient(135deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+label{display:block;margin:10px 0 5px;font-weight:600;color:#333;}
+input,textarea{width:100%;padding:12px;margin-bottom:15px;border-radius:10px;border:1px solid #ccc;font-size:1rem;transition:all 0.3s ease-in-out;}
+input:focus,textarea:focus{outline:none;box-shadow:0 0 10px 2px rgba(255,126,95,0.6);border-color:#ff7e5f;}
+textarea{resize:none;}
+button{width:100%;padding:14px;border:none;border-radius:10px;font-weight:bold;color:white;cursor:pointer;background:linear-gradient(135deg,#ff7e5f,#feb47b);transition:0.3s;}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+p.message{text-align:center;font-weight:bold;color:#28a745;margin-bottom:15px;}
 
-/* HEADING */
-h2 {
-    text-align:center; margin-bottom:25px; font-size:1.8rem;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-
-/* LABELS & INPUTS */
-label { display:block; margin:10px 0 5px; font-weight:600; color:#333; }
-input, textarea {
-    width:100%; padding:12px; margin-bottom:15px;
-    border-radius:10px; border:1px solid #ccc; font-size:1rem;
-    transition: all 0.3s ease-in-out;
-}
-input:focus, textarea:focus {
-    outline:none;
-    box-shadow: 0 0 10px 2px rgba(255,126,95,0.6);
-    border-color: #ff7e5f;
-}
-textarea { resize:none; }
-
-/* CUSTOM DROPDOWN */
-.custom-select { position: relative; width: 100%; margin-bottom: 15px; }
-.select-selected {
-    background:#fff; border:1px solid #ccc; border-radius:10px;
-    padding:12px; cursor:pointer; user-select:none; position:relative;
-    transition: all 0.3s ease-in-out;
-}
-.select-selected.active {
-    box-shadow: 0 0 10px 2px rgba(255,126,95,0.6);
-    border-color: #ff7e5f;
-}
-.select-selected:after { content:"\25BC"; position:absolute; right:12px; top:50%; transform:translateY(-50%); }
-.select-items {
-    position: absolute; background:#fff; top:100%; left:0; right:0;
-    border:1px solid #ccc; border-radius:10px; z-index:99; display:none;
-    max-height:200px; overflow-y:auto;
-}
-.select-items div {
-    padding:10px; cursor:pointer; border-bottom:1px solid #eee;
-}
-.select-items div:hover {
-    background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white;
-}
-
-/* BUTTON */
-button {
-    width:100%; padding:14px; border:none; border-radius:10px;
-    font-weight:bold; color:white; cursor:pointer;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    transition:0.3s;
-}
-button:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
-
-/* MESSAGE */
-p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15px; }
+/* CUSTOM SELECT / MODAL */
+.custom-select{position:relative;width:100%;margin-bottom:15px;}
+.select-selected{background:#fff;border:1px solid #ccc;border-radius:10px;padding:12px;cursor:pointer;user-select:none;position:relative;transition:all 0.3s ease-in-out;}
+.select-selected.active{box-shadow:0 0 10px 2px rgba(255,126,95,0.6);border-color:#ff7e5f;}
+.select-selected:after{content:"\25BC";position:absolute;right:12px;top:50%;transform:translateY(-50%);}
+.select-items{position:absolute;background:#fff;top:100%;left:0;right:0;border:1px solid #ccc;border-radius:10px;z-index:99;display:none;max-height:60vh;overflow-y:auto;}
+.select-items div{padding:10px;cursor:pointer;border-bottom:1px solid #eee;}
+.select-items div:hover{background:linear-gradient(135deg,#ff7e5f,#feb47b);color:white;}
 
 /* RESPONSIVE */
-@media(max-width:600px){
-    .container { margin:20px 15px; padding:20px; }
-    input, textarea, button { font-size:0.95rem; padding:10px; }
+@media(max-width:768px){
+    .navbar{padding:10px 15px;}
+    .navbar-buttons{gap:8px;}
+    .logout,.dashboard-btn{padding:8px 12px;}
+    .container{margin:20px 15px;padding:20px;}
+    .select-items{max-height:50vh;}
+}
+@media(max-width:480px){
+    .logo{font-size:1.2rem;}
+    .navbar-buttons{gap:6px;}
+    .logout,.dashboard-btn{padding:6px 10px;font-size:0.9rem;}
+    .select-items{max-height:40vh;}
 }
 </style>
 </head>
@@ -200,8 +136,10 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
 
 <div class="navbar">
     <div class="logo">Courier Agent</div>
-    <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="navbar-buttons">
+        <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
+        <a href="../logout.php" class="logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">
@@ -216,15 +154,12 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
         <div class="select-items">
             <?php if(!empty($couriers)): ?>
                 <?php foreach($couriers as $row): ?>
-                <div 
-                    data-value="<?= $row['courier_id'] ?>" 
-                    data-email="<?= htmlspecialchars($row['receiver_email']) ?>"
-                >
+                <div data-value="<?= $row['courier_id'] ?>" data-email="<?= htmlspecialchars($row['receiver_email']) ?>">
                     <?= "ID: {$row['courier_id']} | Name: " . htmlspecialchars($row['receiver_name']) . " | Email: " . htmlspecialchars($row['receiver_email']) ?>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div style="cursor:default; color:#999;">No couriers available</div>
+                <div style="cursor:default;color:#999;">No couriers available</div>
             <?php endif; ?>
         </div>
         <input type="hidden" name="courier_id" value="<?= htmlspecialchars($selected_courier_id) ?>">

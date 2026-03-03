@@ -1,10 +1,9 @@
-<?php
+<?php 
 session_start();
 include '../includes/db.php';
 include '../includes/functions.php';
-include '../includes/mail.php'; // PHPMailer setup
+include '../includes/mail.php';
 
-// Ensure agent is logged in
 if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent' || !isset($_SESSION['agent_id'])){
     header("Location: login.php");
     exit();
@@ -13,30 +12,30 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'agent' || !isset($_SES
 $agent_id = $_SESSION['agent_id'];
 $message_sent = '';
 
-// Fetch in-progress and delivered couriers assigned to this agent
+// Fetch only Delivered couriers
 $stmt = $conn->prepare("
-    SELECT c.courier_id, r.name AS receiver_name, r.email AS receiver_email, c.to_location, c.status
+    SELECT c.courier_id, r.name AS receiver_name, r.email AS receiver_email, 
+           c.to_location, c.status
     FROM couriers c
     JOIN customers r ON c.receiver_id = r.customer_id
-    WHERE c.agent_id = ? AND (c.status = 'in-progress' OR c.status = 'delivered')
+    WHERE c.agent_id = ? AND c.status = 'Delivered'
     ORDER BY c.courier_id DESC
 ");
 $stmt->bind_param("i", $agent_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Store couriers in array
 $couriers = [];
 while($row = $result->fetch_assoc()){
     $couriers[] = $row;
 }
 
-// Initialize form fields
 $selected_courier_id = $_POST['courier_id'] ?? '';
 $receiver_name = '';
 $receiver_email = '';
 $to_location = '';
 $body = '';
+$status = '';
 
 if(!empty($selected_courier_id)){
     $stmt_c = $conn->prepare("
@@ -53,21 +52,19 @@ if(!empty($selected_courier_id)){
         $receiver_email = $courier['email'];
         $to_location = $courier['to_location'];
         $status = $courier['status'];
-        $body = "Hello $receiver_name,\n\nYour courier (Status: $status) will be delivered to $to_location today.\n\nThank you,\nCourier Management Team";
+        $body = "Hello $receiver_name,\n\nYour courier (Status: $status) has been delivered to $to_location.\n\nThank you,\nCourier Management Team";
     }
 }
 
-// Send delivery email if submitted
 if(isset($_POST['send_delivery_email'])){
     $courier_id = $_POST['courier_id'] ?? null;
     $to = $_POST['to_email'] ?? '';
     $subject = $_POST['subject'] ?? 'Delivery Notification';
-    $body = strip_tags($_POST['message']); // plain text email
+    $body = strip_tags($_POST['message']);
 
     if(send_mail($to, $subject, $body)){
         $message_sent = "Delivery email sent to $receiver_name ($to)";
 
-        // Log in courier_logs
         if(!empty($courier_id)){
             $stmt_log = $conn->prepare("
                 INSERT INTO courier_logs (courier_id, status, message, notified_via)
@@ -88,115 +85,111 @@ if(isset($_POST['send_delivery_email'])){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send Delivery Notification</title>
+<title>Send Delivery Email</title>
+
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-
-/* HIDE SCROLLBAR BUT ALLOW SCROLL */
-html, body { height:100%; overflow:hidden; }
-.scroll-wrapper { height:100vh; overflow:auto; -ms-overflow-style:none; scrollbar-width:none; }
-.scroll-wrapper::-webkit-scrollbar { display:none; }
-
-/* BACKGROUND */
-body {
-    background: url('../assets/agent-send-delivery-sms.jpg') center/cover no-repeat fixed;
-    position: relative;
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html,body{height:100%;overflow:hidden;}
+.scroll-wrapper{height:100vh;overflow:auto;-ms-overflow-style:none;scrollbar-width:none;}
+.scroll-wrapper::-webkit-scrollbar{display:none;}
+body{
+    background:url('../assets/agent-send-delivery-sms.jpg') center/cover no-repeat fixed;
+    position:relative;
 }
-body::after {
-    content:''; position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.35); z-index:-1;
+body::after{
+    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.35);z-index:-1;
 }
 
-/* NAVBAR */
-.navbar { display:flex; justify-content:flex-end; align-items:center; padding:15px 30px; margin-bottom:30px; gap:10px; }
-.logo {
-    font-size:1.5rem; font-weight:bold;
+/* Navbar */
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    flex-wrap: wrap;
+}
+.logo{
+    font-size:1.5rem;
+    font-weight:bold;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    position:absolute; left:30px;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
-.logout {
-    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; background:linear-gradient(135deg,#ff7e5f,#feb47b);
+.navbar-buttons{
+    display:flex;
+    gap:10px;
+    flex-wrap: wrap;
+}
+.logout,.dashboard-btn{
+    color:white;
+    text-decoration:none;
+    padding:12px 25px;
+    border-radius:10px;
+    font-weight:bold;
     transition:0.3s;
 }
-.logout:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+.dashboard-btn{background:linear-gradient(135deg,#fddb6d,#fcb045);}
+.logout:hover,.dashboard-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
 
-.dashboard-btn {
-    color:white; text-decoration:none; padding:12px 25px; border-radius:10px;
-    font-weight:bold; background:linear-gradient(135deg,#fddb6d,#fcb045);
+/* Container & Form */
+.container{
+    max-width:500px;
+    margin:40px auto;
+    padding:20px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    color:#fff;
+}
+h2{text-align:center;margin-bottom:20px;}
+p.message{text-align:center;font-weight:bold;color:#00ff88;margin-bottom:15px;}
+label{display:block;margin:10px 0 5px;font-weight:600;}
+input,textarea,button{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    margin-bottom:12px;
+    font-size:1rem;
     transition:0.3s;
 }
-.dashboard-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
-
-/* CONTAINER */
-.container {
-    max-width:600px; margin:0 auto 50px auto;
-    background:#fff; padding:25px; border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+input,textarea{
+    background:#fff;
+    color:#000;
 }
-
-/* HEADING */
-h2 {
-    text-align:center; margin-bottom:25px; font-size:1.8rem;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-}
-
-/* LABELS & INPUTS */
-label { display:block; margin:10px 0 5px; font-weight:600; color:#333; }
-input, textarea {
-    width:100%; padding:12px; margin-bottom:15px;
-    border-radius:10px; border:1px solid #ccc; font-size:1rem;
-    transition: all 0.3s ease-in-out;
-}
-input:focus, textarea:focus {
+input:hover, textarea:hover,
+input:focus, textarea:focus{
+    box-shadow:0 0 10px 2px rgba(255,126,95,0.6);
     outline:none;
-    box-shadow: 0 0 10px 2px rgba(255,126,95,0.6);
-    border-color: #ff7e5f;
-}
-textarea { resize:none; }
-
-/* CUSTOM DROPDOWN */
-.custom-select { position: relative; width: 100%; margin-bottom: 15px; }
-.select-selected {
-    background:#fff; border:1px solid #ccc; border-radius:10px;
-    padding:12px; cursor:pointer; user-select:none; position:relative;
-    transition: all 0.3s ease-in-out;
-}
-.select-selected.active {
-    box-shadow: 0 0 10px 2px rgba(255,126,95,0.6);
-    border-color: #ff7e5f;
-}
-.select-selected:after { content:"\25BC"; position:absolute; right:12px; top:50%; transform:translateY(-50%); }
-.select-items {
-    position: absolute; background:#fff; top:100%; left:0; right:0;
-    border:1px solid #ccc; border-radius:10px; z-index:99; display:none;
-    max-height:200px; overflow-y:auto;
-}
-.select-items div {
-    padding:10px; cursor:pointer; border-bottom:1px solid #eee;
-}
-.select-items div:hover {
-    background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white;
 }
 
-/* BUTTON */
-button {
-    width:100%; padding:14px; border:none; border-radius:10px;
-    font-weight:bold; color:white; cursor:pointer;
-    background:linear-gradient(135deg,#ff7e5f,#feb47b);
-    transition:0.3s;
+textarea{resize:none;}
+button{background:linear-gradient(135deg,#ff7e5f,#feb47b);color:#fff;font-weight:bold;cursor:pointer;}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+
+/* Modal */
+.modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);}
+.modal-content{background:#fff;margin:50px auto;padding:20px;border-radius:20px;width:90%;max-width:500px;max-height:70vh;overflow:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
+.close-btn{cursor:pointer;font-size:1.5rem;font-weight:bold;}
+#modal-search{width:100%;padding:10px;margin-bottom:15px;border-radius:10px;border:1px solid #ccc;}
+.courier-item{padding:10px;border-bottom:1px solid #eee;cursor:pointer;transition:0.3s;}
+.courier-item:hover{background:linear-gradient(135deg,#ff7e5f,#feb47b);color:#fff;}
+
+/* Responsive */
+@media(max-width:768px){
+    .navbar{padding:10px 15px;}
+    .navbar-buttons{gap:8px;}
+    .logout,.dashboard-btn{padding:8px 12px;}
+    .container{margin:20px 15px;padding:15px;}
 }
-button:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.25); }
-
-/* MESSAGE */
-p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15px; }
-
-/* RESPONSIVE */
-@media(max-width:600px){
-    .container { margin:20px 15px; padding:20px; }
-    input, textarea, button { font-size:0.95rem; padding:10px; }
+@media(max-width:480px){
+    .logo{font-size:1.2rem;}
+    .navbar-buttons{gap:6px;}
+    .logout,.dashboard-btn{padding:6px 10px;font-size:0.9rem;}
+    .container{padding:12px;}
 }
 </style>
 </head>
@@ -205,77 +198,101 @@ p.message { text-align:center; font-weight:bold; color:#28a745; margin-bottom:15
 
 <div class="navbar">
     <div class="logo">Courier Agent</div>
-    <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
-    <a href="../logout.php" class="logout">Logout</a>
+    <div class="navbar-buttons">
+        <a href="dashboard.php" class="dashboard-btn">Dashboard</a>
+        <a href="../logout.php" class="logout">Logout</a>
+    </div>
 </div>
 
 <div class="container">
-<h2>Send Delivery Notification Email</h2>
+<h2>Send Delivery Email</h2>
 
-<?php if($message_sent) echo "<p class='message'>" . htmlspecialchars($message_sent) . "</p>"; ?>
+<?php if($message_sent) echo "<p class='message'>".htmlspecialchars($message_sent)."</p>"; ?>
 
 <form method="POST">
-    <label>Select Courier (In-Progress / Delivered):</label>
-    <div class="custom-select" id="courier-select">
-        <div class="select-selected"><?= $selected_courier_id ? "Courier ID: $selected_courier_id" : "--Select Courier--" ?></div>
-        <div class="select-items">
-            <?php if(!empty($couriers)): ?>
-                <?php foreach($couriers as $row): ?>
-                <div data-value="<?= $row['courier_id'] ?>" data-email="<?= htmlspecialchars($row['receiver_email']) ?>">
-                    <?= "ID: {$row['courier_id']} | " . htmlspecialchars($row['receiver_name']) . " | To: {$row['to_location']} | Status: {$row['status']}" ?>
-                </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div style="cursor:default; color:#999;">No couriers available</div>
-            <?php endif; ?>
-        </div>
-        <input type="hidden" name="courier_id" value="<?= htmlspecialchars($selected_courier_id) ?>">
-    </div>
+    <label>Select Delivered Courier:</label>
+    <input type="text" id="open-modal" readonly placeholder="Click to select courier" value="<?= $selected_courier_id ? "ID: $selected_courier_id | $receiver_name" : '' ?>">
 
-    <?php if($selected_courier_id && $receiver_email): ?>
-        <label>To (Email Address):</label>
-        <input type="email" name="to_email" value="<?= htmlspecialchars($receiver_email) ?>" required>
+    <label>To (Email Address):</label>
+    <input type="email" name="to_email" value="<?= htmlspecialchars($receiver_email) ?>" required>
 
-        <label>Subject:</label>
-        <input type="text" name="subject" value="Delivery Notification" required>
+    <label>Subject:</label>
+    <input type="text" name="subject" value="Delivery Notification" required>
 
-        <label>Message:</label>
-        <textarea name="message" rows="6" required><?= htmlspecialchars($body) ?></textarea>
+    <label>Message:</label>
+    <textarea name="message" rows="5" required><?= htmlspecialchars($body) ?></textarea>
 
-        <button type="submit" name="send_delivery_email">Send Delivery Email</button>
-    <?php endif; ?>
+    <button type="submit" name="send_delivery_email">Send Delivery Email</button>
+
+    <input type="hidden" name="courier_id" id="courier_id_hidden" value="<?= htmlspecialchars($selected_courier_id) ?>">
 </form>
 </div>
+
+<div id="courier-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select Delivered Courier</h3>
+            <span class="close-btn" id="modal-close">&times;</span>
+        </div>
+
+        <input type="text" id="modal-search" placeholder="Search by ID, Name, Email, Location">
+
+        <div id="modal-list">
+            <?php foreach($couriers as $c): ?>
+            <div class="courier-item" data-id="<?= $c['courier_id'] ?>" data-email="<?= htmlspecialchars($c['receiver_email']) ?>" data-name="<?= htmlspecialchars($c['receiver_name']) ?>" data-location="<?= htmlspecialchars($c['to_location']) ?>" data-status="<?= htmlspecialchars($c['status']) ?>">
+                <?= "ID: {$c['courier_id']} | " . htmlspecialchars($c['receiver_name']) . " | To: {$c['to_location']}" ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
 </div>
 
 <script>
-const selected = document.querySelector('.select-selected');
-const items = document.querySelector('.select-items');
-const courierInput = document.querySelector('input[name="courier_id"]');
-const emailInput = document.querySelector('input[name="to_email"]');
+const modal = document.getElementById('courier-modal');
+const openModal = document.getElementById('open-modal');
+const closeModal = document.getElementById('modal-close');
+const courierIdHidden = document.getElementById('courier_id_hidden');
+const modalSearch = document.getElementById('modal-search');
+const toEmailInput = document.querySelector('input[name="to_email"]');
+const messageTextarea = document.querySelector('textarea[name="message"]');
 
-selected.addEventListener('click', () => {
-    items.style.display = items.style.display === 'block' ? 'none' : 'block';
-    selected.classList.toggle('active'); // glow effect
+// Show modal
+openModal.addEventListener('click', () => { 
+    modal.style.display = 'block'; 
+    modalSearch.focus(); 
 });
 
-document.querySelectorAll('.select-items div').forEach(div => {
-    div.addEventListener('click', () => {
-        selected.textContent = div.textContent;
-        courierInput.value = div.dataset.value;
-        emailInput.value = div.dataset.email;
-        items.style.display = 'none';
-        selected.classList.remove('active'); // remove glow
-    });
-});
+// Close modal
+closeModal.addEventListener('click', () => modal.style.display = 'none');
+window.addEventListener('click', e => { if(e.target == modal) modal.style.display = 'none'; });
 
+// Select courier and autofill email + message
 document.addEventListener('click', e => {
-    if(!selected.contains(e.target) && !items.contains(e.target)){
-        items.style.display='none';
-        selected.classList.remove('active');
+    if(e.target.classList.contains('courier-item')){
+        const courierId = e.target.dataset.id;
+        const receiverName = e.target.dataset.name;
+        const receiverEmail = e.target.dataset.email;
+        const toLocation = e.target.dataset.location;
+        const status = e.target.dataset.status;
+
+        courierIdHidden.value = courierId;
+        openModal.value = e.target.textContent;
+        toEmailInput.value = receiverEmail;
+        messageTextarea.value = `Hello ${receiverName},\n\nYour courier (Status: ${status}) has been delivered to ${toLocation}.\n\nThank you,\nCourier Management Team`;
+
+        modal.style.display = 'none';
     }
+});
+
+// Search
+modalSearch.addEventListener('keyup', () => {
+    const val = modalSearch.value.toLowerCase();
+    document.querySelectorAll('.courier-item').forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(val) ? 'block' : 'none';
+    });
 });
 </script>
 
+</div>
 </body>
 </html>

@@ -74,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 
-/* HIDE SCROLLBAR BUT KEEP SCROLL */
 html,body{
 height:100%;
 overflow:auto;
@@ -83,7 +82,6 @@ scrollbar-width:none;
 }
 body::-webkit-scrollbar{display:none;}
 
-/* BACKGROUND */
 body{
 background:url('../assets/agent.jpg') center/cover no-repeat fixed;
 position:relative;
@@ -117,53 +115,82 @@ background:linear-gradient(135deg,#ff7e5f,#feb47b);transition:0.3s;
 }
 .logout:hover{transform:translateY(-2px);box-shadow:0 6px 15px rgba(0,0,0,0.25);}
 
-/* CONTAINER */
+/* CONTAINER (Improved) */
 .container{
-width:90%;max-width:600px;margin:50px auto 80px auto;
-background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);
-border-radius:20px;padding:30px;color:#fff;
+width:90%;
+max-width:600px;
+margin:60px auto 100px auto;
+background:rgba(255,255,255,0.18);
+backdrop-filter:blur(18px);
+border-radius:25px;
+padding:40px;
+color:#fff;
+box-shadow:0 15px 40px rgba(0,0,0,0.35);
 }
 
 /* FORM */
-h2{text-align:center;margin-bottom:20px;}
-label{display:block;margin:10px 0 5px;font-weight:600;}
+h2{text-align:center;margin-bottom:25px;font-size:1.6rem;}
+label{display:block;margin:15px 0 6px;font-weight:600;}
 
 input,button{
-width:100%;padding:14px;border-radius:10px;border:none;margin-bottom:5px;font-size:1rem;
+width:100%;
+padding:15px;
+border-radius:12px;
+border:none;
+font-size:1rem;
 transition:0.3s;
 }
 
 input{
-background:#fff;color:#000;
+background:#fff;
+color:#000;
 }
 
-/* --- Glow up effect on focus --- */
 input:focus{
 outline:none;
-box-shadow: 0 0 10px 3px rgba(255,126,95,0.7);
+box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
 border:1px solid #ff7e5f;
 }
 
-/* BUTTON */
+/* BUTTON (Improved) */
 button{
-cursor:pointer;background:linear-gradient(135deg,#ff7e5f,#feb47b);
-color:#fff;font-weight:bold;
-}
-button:hover{
-transform:translateY(-1px);
-box-shadow:0 4px 15px rgba(0,0,0,0.25);
+cursor:pointer;
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+color:#fff;
+font-weight:bold;
+transition:0.3s;
 }
 
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 15px rgba(0,0,0,0.25);
+}
+
+/* Messages */
 .message{display:block;margin-bottom:10px;font-size:0.9rem;}
 .valid{color:#b8ffb8;}
 .invalid{color:#ff4c4c;}
 
-p.success{color:#d4ffd4;text-align:center;margin-bottom:15px;}
-p.error{color:#ffd4d4;text-align:center;margin-bottom:15px;}
+/* Darker Bold Success */
+p.success{
+color:#ff4d4d;
+font-weight:bold;
+text-align:center;
+margin-bottom:15px;
+font-size:1.05rem;
+}
+
+/* Error */
+p.error{
+color:#ff9999;
+font-weight:bold;
+text-align:center;
+margin-bottom:15px;
+}
 
 @media(max-width:600px){
-.container{padding:20px;margin:30px auto 60px auto;}
-input,button{font-size:0.9rem;padding:10px;}
+.container{padding:25px;margin:40px auto 80px auto;}
+input,button{font-size:0.9rem;padding:12px;}
 }
 </style>
 </head>
@@ -208,7 +235,6 @@ input,button{font-size:0.9rem;padding:10px;}
 </div>
 
 <script>
-// Real-time validation
 const form=document.getElementById('agentForm');
 
 const nameInput=form.name;

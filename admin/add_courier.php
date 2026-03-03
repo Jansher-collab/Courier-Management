@@ -136,7 +136,7 @@ border:1px solid #ff7e5f;
 button{cursor:pointer; background:linear-gradient(135deg,#ff7e5f,#feb47b); color:white; font-weight:bold;}
 button:hover{ transform:translateY(-1px); box-shadow:0 4px 15px rgba(0,0,0,0.25); }
 
-p.success{color:#d4ffd4;text-align:center;margin-bottom:12px;}
+p.success{color:#00ff88;;text-align:center;margin-bottom:12px;}
 p.error{color:#ffd4d4;text-align:center;margin-bottom:12px;}
 
 /* DROPDOWN */
