@@ -96,10 +96,6 @@ body{
     background:url('../assets/agent-send-delivery-sms.jpg') center/cover no-repeat fixed;
     position:relative;
 }
-body::after{
-    content:'';position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.35);z-index:-1;
-}
 
 /* Navbar */
 .navbar{
@@ -108,6 +104,7 @@ body::after{
     align-items:center;
     padding:15px 30px;
     flex-wrap: wrap;
+    width:100%;
 }
 .logo{
     font-size:1.5rem;
@@ -118,33 +115,41 @@ body::after{
 }
 .navbar-buttons{
     display:flex;
-    gap:10px;
-    flex-wrap: wrap;
+    gap:12px;
+    flex-wrap:wrap;
 }
-.logout,.dashboard-btn{
+.dashboard-btn,.logout{
     color:white;
     text-decoration:none;
-    padding:12px 25px;
+    padding:10px 20px;
     border-radius:10px;
     font-weight:bold;
-    transition:0.3s;
+    white-space:nowrap;
+    transition:0.4s;
 }
+.dashboard-btn{background:linear-gradient(135deg,#ffd200,#f7971e);}
 .logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
-.dashboard-btn{background:linear-gradient(135deg,#fddb6d,#fcb045);}
-.logout:hover,.dashboard-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+.dashboard-btn:hover,.logout:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+
+/* Mobile Navbar */
+@media(max-width:768px){
+.navbar{flex-direction:column;align-items:center;gap:15px;}
+.navbar-buttons{justify-content:center;width:100%;}
+.dashboard-btn,.logout{padding:8px 15px;font-size:0.9rem;}
+}
 
 /* Container & Form */
 .container{
-    max-width:500px;
-    margin:40px auto;
-    padding:20px;
-    background:rgba(255,255,255,0.15);
-    backdrop-filter:blur(15px);
+    max-width:600px;
+    margin:30px auto 50px auto; /* reduced top margin */
+    padding:25px;
+    background:rgba(255,255,255,0.9);
     border-radius:20px;
-    color:#fff;
+    color:#000;
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
 }
-h2{text-align:center;margin-bottom:20px;}
-p.message{text-align:center;font-weight:bold;color:#00ff88;margin-bottom:15px;}
+h2{text-align:center;margin-bottom:25px;color:#ff7e5f;}
+p.message{text-align:center;font-weight:bold;color:#28a745;margin-bottom:15px;}
 label{display:block;margin:10px 0 5px;font-weight:600;}
 input,textarea,button{
     width:100%;
@@ -155,16 +160,9 @@ input,textarea,button{
     font-size:1rem;
     transition:0.3s;
 }
-input,textarea{
-    background:#fff;
-    color:#000;
-}
+input,textarea{background:#fff;color:#000;}
 input:hover, textarea:hover,
-input:focus, textarea:focus{
-    box-shadow:0 0 10px 2px rgba(255,126,95,0.6);
-    outline:none;
-}
-
+input:focus, textarea:focus{box-shadow:0 0 10px 2px rgba(255,126,95,0.6);outline:none;}
 textarea{resize:none;}
 button{background:linear-gradient(135deg,#ff7e5f,#feb47b);color:#fff;font-weight:bold;cursor:pointer;}
 button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
@@ -180,16 +178,12 @@ button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
 
 /* Responsive */
 @media(max-width:768px){
-    .navbar{padding:10px 15px;}
-    .navbar-buttons{gap:8px;}
-    .logout,.dashboard-btn{padding:8px 12px;}
-    .container{margin:20px 15px;padding:15px;}
+    .container{margin:40px 15px 50px 15px;padding:20px;}
 }
 @media(max-width:480px){
     .logo{font-size:1.2rem;}
-    .navbar-buttons{gap:6px;}
-    .logout,.dashboard-btn{padding:6px 10px;font-size:0.9rem;}
-    .container{padding:12px;}
+    .dashboard-btn,.logout{padding:6px 10px;font-size:0.85rem;}
+    .container{margin:30px 10px 50px 10px;padding:15px;}
 }
 </style>
 </head>

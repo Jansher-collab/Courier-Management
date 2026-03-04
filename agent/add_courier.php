@@ -93,8 +93,10 @@ body::after{
 
 /* NAVBAR */
 .navbar{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:15px 30px;position:sticky;top:0; z-index:999;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
 }
 .logo{font-size:1.4rem;font-weight:bold;color:#ff7e5f;}
 .nav-buttons{display:flex; gap:10px;}

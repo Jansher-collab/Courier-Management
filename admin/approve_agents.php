@@ -19,7 +19,6 @@ if(isset($_POST['approve'])){
     $stmt->bind_param("i",$agent_id);
 
     if($stmt->execute()){
-
         $stmt2=$conn->prepare("
             SELECT u.email,u.name 
             FROM users u
@@ -40,9 +39,8 @@ if(isset($_POST['approve'])){
             ";
             send_mail($agent['email'],$subject,$body);
         }
-
         $success="Agent approved successfully.";
-    }else{
+    } else {
         $error="Failed to approve agent.";
     }
 }
@@ -75,7 +73,7 @@ if(isset($_POST['reject'])){
             send_mail($agent['email'],$subject,$body);
         }
         $success="Agent rejected successfully.";
-    } else{
+    } else {
         $error="Failed to reject agent.";
     }
 }
@@ -93,122 +91,143 @@ ORDER BY a.agent_id DESC
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Approve Agents</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 
-html,body{
-height:100%;
-overflow:hidden;
+body{
 background:url('../assets/admin-agents-approval.avif') center/cover no-repeat fixed;
 position:relative;
+padding-bottom:150px;
 }
-
 body::after{
-content:'';
-position:fixed;
-top:0; left:0;
-width:100%; height:100%;
-background:rgba(0,0,0,0.35);
-z-index:-1;
+content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.35);z-index:-1;
 }
 
-.scroll-wrapper{
-height:100%;
-overflow:auto;
--ms-overflow-style:none;
-scrollbar-width:none;
-}
-.scroll-wrapper::-webkit-scrollbar{display:none;}
-
-.navbar{
+/* --- Navbar --- */
+.navbar {
 display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
+flex-wrap:wrap;
 }
-
-.logo{
+.logo {
 font-size:1.5rem;
 font-weight:bold;
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
-
-.nav-buttons{
+.nav-right {
 display:flex;
 gap:10px;
+flex-wrap:wrap;
 }
-
-.btn{
+.dashboard,.logout{
 text-decoration:none;
 padding:12px 25px;
 border-radius:10px;
 font-weight:bold;
-color:white;
+color:#fff;
+transition:0.3s;
+}
+.dashboard{background:linear-gradient(135deg,#ffd200,#f7971e);}
+.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
+
+@media(max-width:768px){
+.navbar{flex-direction:column;align-items:center;}
+.nav-right{width:100%;justify-content:center;margin-top:10px;}
 }
 
-/* DASHBOARD */
-.dashboard{
-background:linear-gradient(135deg,#ffd200,#f7971e);
-}
-
-/* LOGOUT */
-.logout{
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-}
-
+/* Container */
 .container{
+width:90%;
 max-width:900px;
-margin:50px auto;
-background:#fff;
-padding:25px;
-border-radius:20px;
-box-shadow:0 10px 30px rgba(0,0,0,0.25);
+margin:80px auto;
+background:rgba(255,255,255,0.18);
+backdrop-filter:blur(18px);
+border-radius:25px;
+padding:30px 20px;
+box-shadow:0 15px 40px rgba(0,0,0,0.35);
+overflow:hidden;
 }
 
-h2{text-align:center;margin-bottom:20px;color:#ff7e5f;}
+h2{text-align:center;margin-bottom:25px;color:#ff7e5f;}
 
-table{
-width:100%;
-border-collapse:collapse;
-}
-th,td{
-padding:12px;
-border-bottom:1px solid #ddd;
-text-align:left;
-}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:12px;border-bottom:1px solid #ddd;}
+
+form{display:flex;gap:8px;flex-wrap:wrap;}
 
 button{
-padding:6px 14px;
 border:none;
 border-radius:8px;
 cursor:pointer;
 font-weight:bold;
-margin-right:5px;
 color:white;
+padding:8px 18px;
+font-size:0.9rem;
 }
-button.approve{background:linear-gradient(135deg,#28a745,#2ecc71);}
-button.reject{background:linear-gradient(135deg,#e74c3c,#ff4d4d);}
+.approve{background:linear-gradient(135deg,#28a745,#2ecc71);}
+.reject{background:linear-gradient(135deg,#e74c3c,#ff4d4d);}
 
-p.success{color:#28a745;text-align:center;margin-bottom:15px;}
-p.error{color:#dc3545;text-align:center;margin-bottom:15px;}
+p.success{text-align:center;color:#28a745;margin-bottom:15px;}
+p.error{text-align:center;color:#dc3545;margin-bottom:15px;}
+
+/* MOBILE FIX */
+@media(max-width:768px){
+
+table,thead,tbody,tr,th,td{display:block;width:100%;}
+thead{display:none;}
+
+tr{
+margin-bottom:15px;
+background:rgba(255,255,255,0.85);
+padding:12px;
+border-radius:15px;
+}
+
+td{
+padding:6px 0;
+text-align:right;
+position:relative;
+}
+
+td::before{
+content:attr(data-label);
+float:left;
+font-weight:bold;
+}
+
+form{
+flex-direction:column;
+align-items:center;
+margin-top:8px;
+}
+
+button{
+width:70%;              /* smaller width */
+padding:8px 10px;       /* reduced padding */
+font-size:0.85rem;      /* smaller text */
+margin:4px 0;
+}
+}
+
 </style>
 </head>
 
 <body>
-<div class="scroll-wrapper">
 
 <div class="navbar">
 <div class="logo">Admin Panel</div>
-
-<div class="nav-buttons">
-<a href="dashboard.php" class="btn dashboard">Dashboard</a>
-<a href="../logout.php" class="btn logout">Logout</a>
+<div class="nav-right">
+<a href="dashboard.php" class="dashboard">Dashboard</a>
+<a href="../logout.php" class="logout">Logout</a>
 </div>
-
 </div>
 
 <div class="container">
@@ -228,11 +247,11 @@ p.error{color:#dc3545;text-align:center;margin-bottom:15px;}
 <?php if($agents && $agents->num_rows>0){
 while($a=$agents->fetch_assoc()){ ?>
 <tr>
-<td><?= htmlspecialchars($a['name']) ?></td>
-<td><?= htmlspecialchars($a['email']) ?></td>
-<td><?= htmlspecialchars($a['branch']) ?></td>
-<td>
-<form method="POST" style="display:flex; gap:5px;">
+<td data-label="Name"><?= htmlspecialchars($a['name']) ?></td>
+<td data-label="Email"><?= htmlspecialchars($a['email']) ?></td>
+<td data-label="Branch"><?= htmlspecialchars($a['branch']) ?></td>
+<td data-label="Action">
+<form method="POST">
 <input type="hidden" name="agent_id" value="<?= $a['agent_id'] ?>">
 <button type="submit" name="approve" class="approve">Approve</button>
 <button type="submit" name="reject" class="reject">Reject</button>
@@ -244,7 +263,6 @@ while($a=$agents->fetch_assoc()){ ?>
 <?php } ?>
 </table>
 
-</div>
 </div>
 </body>
 </html>

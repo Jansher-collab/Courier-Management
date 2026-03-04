@@ -76,8 +76,6 @@ if ($result) {
 
 /* RESET */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-
-/* HIDE SCROLLBAR */
 html{scrollbar-width:none;}
 html::-webkit-scrollbar{display:none;}
 
@@ -101,12 +99,19 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 padding:15px 30px;
+flex-wrap:wrap;
 }
-.logo{;font-size:1.5rem;font-weight:bold; color:#ff7e5f;}
+
+.logo{
+font-size:1.5rem;
+font-weight:bold;
+color:#ff7e5f;
+}
 
 .nav-buttons{
 display:flex;
 gap:10px;
+flex-wrap:wrap;
 }
 
 .btn{
@@ -117,14 +122,34 @@ font-weight:bold;
 color:white;
 }
 
-/* DASHBOARD YELLOW */
 .dashboard{
 background:linear-gradient(135deg,#ffd200,#f7971e);
 }
 
-/* LOGOUT */
 .logout{
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+
+/* MOBILE NAVBAR FIX */
+@media(max-width:768px){
+
+.navbar{
+flex-direction:column;
+align-items:center;
+}
+
+.logo{
+margin-bottom:10px;
+}
+
+.nav-buttons{
+width:100%;
+justify-content:center;
+}
+
+.btn{
+padding:10px 20px;
+}
 }
 
 /* CONTAINER */
@@ -153,9 +178,7 @@ box-shadow:0 5px 20px rgba(0,0,0,0.15);
 }
 
 th,td{padding:14px;text-align:left;}
-
 th{background:#ff7e5f;color:#fff;}
-
 td{
 background:#ffffff;
 border-bottom:1px solid #eee;
@@ -184,7 +207,11 @@ font-weight:bold;
 /* MOBILE TABLE */
 @media(max-width:768px){
 
-table,thead,tbody,tr,td{display:block;width:100%;}
+table,thead,tbody,tr,td{
+display:block;
+width:100%;
+}
+
 thead{display:none;}
 
 tr{
@@ -222,7 +249,6 @@ color:#333;
 <a href="dashboard.php" class="btn dashboard">Dashboard</a>
 <a href="../logout.php" class="btn logout">Logout</a>
 </div>
-
 </div>
 
 <div class="container">

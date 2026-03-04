@@ -80,24 +80,67 @@ if(isset($_POST['send_email'])){
 <title>Send Email to Customer</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html,body{height:100%;overflow:hidden;}
-.scroll-wrapper{height:100vh;overflow:auto;-ms-overflow-style:none;scrollbar-width:none;}
-.scroll-wrapper::-webkit-scrollbar{display:none;}
-body{background:url('../assets/agent-send-sms.jpg') center/cover no-repeat fixed;position:relative;}
+html,body{width:100%;overflow-x:hidden;}
+body{background:url('../assets/agent-send-sms.jpg') center/cover no-repeat fixed;position:relative;padding-top:70px;}
 body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35);z-index:-1;}
 
 /* NAVBAR */
-.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;margin-bottom:30px;position:relative;}
-.logo{font-size:1.5rem;font-weight:bold;background:linear-gradient(135deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.navbar-buttons{display:flex;gap:10px;}
-.logout,.dashboard-btn{color:white;text-decoration:none;padding:12px 25px;border-radius:10px;font-weight:bold;transition:0.3s;}
+.navbar{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    flex-wrap:wrap;
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:999;
+}
+.logo{
+    font-size:1.5rem;
+    font-weight:bold;
+    color:#ff7e5f;
+}
+.navbar-buttons{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+.dashboard-btn,.logout{
+    text-decoration:none;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:bold;
+    color:white;
+    white-space:nowrap;
+    transition:0.4s;
+}
+.dashboard-btn{background:linear-gradient(135deg,#ffd200,#f7971e);}
 .logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
-.dashboard-btn{background:linear-gradient(135deg,#fddb6d,#fcb045);}
-.logout:hover,.dashboard-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+.dashboard-btn:hover,.logout:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+
+/* MOBILE NAVBAR */
+@media(max-width:768px){
+.navbar{flex-direction:column;align-items:center;gap:15px;}
+.navbar-buttons{justify-content:center;width:100%;}
+.dashboard-btn,.logout{padding:8px 15px;font-size:0.9rem;}
+}
 
 /* CONTAINER */
-.container{max-width:600px;margin:0 auto 50px auto;background:#fff;padding:25px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);}
-h2{text-align:center;margin-bottom:25px;font-size:1.8rem;background:linear-gradient(135deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.container{
+    width:90%;
+    max-width:700px;
+    margin:20px auto 50px auto;
+    background:rgba(255,255,255,0.95);
+    backdrop-filter:blur(6px);
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+}
+h2{text-align:center;margin-bottom:25px;font-size:1.8rem;color:#ff7e5f;}
+
+/* FORM */
 label{display:block;margin:10px 0 5px;font-weight:600;color:#333;}
 input,textarea{width:100%;padding:12px;margin-bottom:15px;border-radius:10px;border:1px solid #ccc;font-size:1rem;transition:all 0.3s ease-in-out;}
 input:focus,textarea:focus{outline:none;box-shadow:0 0 10px 2px rgba(255,126,95,0.6);border-color:#ff7e5f;}
@@ -106,33 +149,25 @@ button{width:100%;padding:14px;border:none;border-radius:10px;font-weight:bold;c
 button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
 p.message{text-align:center;font-weight:bold;color:#28a745;margin-bottom:15px;}
 
-/* CUSTOM SELECT / MODAL */
+/* CUSTOM SELECT */
 .custom-select{position:relative;width:100%;margin-bottom:15px;}
 .select-selected{background:#fff;border:1px solid #ccc;border-radius:10px;padding:12px;cursor:pointer;user-select:none;position:relative;transition:all 0.3s ease-in-out;}
 .select-selected.active{box-shadow:0 0 10px 2px rgba(255,126,95,0.6);border-color:#ff7e5f;}
 .select-selected:after{content:"\25BC";position:absolute;right:12px;top:50%;transform:translateY(-50%);}
-.select-items{position:absolute;background:#fff;top:100%;left:0;right:0;border:1px solid #ccc;border-radius:10px;z-index:99;display:none;max-height:60vh;overflow-y:auto;}
+.select-items{position:absolute;background:#fff;top:100%;left:0;right:0;border:1px solid #ccc;border-radius:10px;z-index:99;display:none;max-height:50vh;overflow-y:auto;}
 .select-items div{padding:10px;cursor:pointer;border-bottom:1px solid #eee;}
 .select-items div:hover{background:linear-gradient(135deg,#ff7e5f,#feb47b);color:white;}
 
 /* RESPONSIVE */
-@media(max-width:768px){
-    .navbar{padding:10px 15px;}
-    .navbar-buttons{gap:8px;}
-    .logout,.dashboard-btn{padding:8px 12px;}
-    .container{margin:20px 15px;padding:20px;}
-    .select-items{max-height:50vh;}
-}
 @media(max-width:480px){
-    .logo{font-size:1.2rem;}
-    .navbar-buttons{gap:6px;}
-    .logout,.dashboard-btn{padding:6px 10px;font-size:0.9rem;}
-    .select-items{max-height:40vh;}
+.container{width:95%;padding:15px;}
+.logo{font-size:1.2rem;}
+.dashboard-btn,.logout{padding:6px 10px;font-size:0.85rem;}
+.select-items{max-height:40vh;}
 }
 </style>
 </head>
 <body>
-<div class="scroll-wrapper">
 
 <div class="navbar">
     <div class="logo">Courier Agent</div>
@@ -176,8 +211,6 @@ p.message{text-align:center;font-weight:bold;color:#28a745;margin-bottom:15px;}
 
     <button type="submit" name="send_email">Send Email</button>
 </form>
-</div>
-
 </div>
 
 <script>

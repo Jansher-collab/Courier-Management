@@ -1,4 +1,4 @@
-<?php
+<?php 
 include('../includes/auth.php');
 include('../includes/db.php');
 
@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $customer_id > 0) {
     }
 }
 
-// Handle search by name or ID
 $search = trim($_GET['search'] ?? '');
 if ($search !== '') {
     $stmt = $conn->prepare("SELECT * FROM customers WHERE name LIKE ? OR customer_id LIKE ? ORDER BY customer_id DESC");
@@ -71,7 +70,6 @@ body{
     background:url('../assets/admin-manage-customers.jpg') center/cover no-repeat fixed;
     position:relative;
     padding-bottom:120px;
-    padding-top:80px; /* space for navbar */
 }
 body::after{
     content:'';
@@ -83,37 +81,61 @@ body::after{
 
 /* NAVBAR */
 .navbar{
-    display:flex;
+   display:flex;
     justify-content:space-between;
     align-items:center;
     padding:15px 30px;
-    position:fixed;
-    top:0;
-    width:100%;
-    z-index:999;
+    flex-wrap:wrap;
 }
+
 .logo{
     color:#ff7e5f;
     font-size:1.5rem;
     font-weight:bold;
 }
+
 .nav-buttons{
     display:flex;
     gap:10px;
+    flex-wrap:wrap;
 }
+
 .btn{
     text-decoration:none;
     padding:12px 20px;
     border-radius:10px;
     font-weight:bold;
     color:white;
-    transition:0.3s;
 }
+
 .dashboard{
     background:linear-gradient(135deg,#ffd200,#f7971e);
 }
+
 .logout{
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+
+/* MOBILE NAVBAR FIX */
+@media(max-width:768px){
+
+.navbar{
+    flex-direction:column;
+    align-items:center;
+}
+
+.logo{
+    margin-bottom:10px;
+}
+
+.nav-buttons{
+    width:100%;
+    justify-content:center;
+}
+
+.btn{
+    padding:10px 18px;
+}
 }
 
 /* CONTAINER */
@@ -180,7 +202,7 @@ button.action{
     border:none;
     border-radius:8px;
     cursor:pointer;
-    margin:2px 2px;
+    margin:2px;
     background:linear-gradient(135deg,#ff7e5f,#feb47b);
     color:#fff;
     font-weight:bold;
@@ -191,6 +213,7 @@ button.action{
 @media(max-width:768px){
 table,thead,tbody,tr,td{display:block;width:100%;}
 thead{display:none;}
+
 tr{
     margin-bottom:15px;
     background:#ffffff;
@@ -198,23 +221,27 @@ tr{
     border-radius:12px;
     box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
+
 td{
     display:flex;
     justify-content:space-between;
     align-items:center;
     padding:8px 0;
 }
+
 td::before{
     content:attr(data-label);
     font-weight:bold;
     margin-right:10px;
     color:#333;
 }
+
 td[data-label="Actions"]{
     flex-direction:row;
     justify-content:flex-start;
     gap:6px;
 }
+
 button.action{
     padding:8px 10px;
     font-size:0.9rem;
@@ -225,7 +252,6 @@ button.action{
 
 <body>
 
-<!-- NAVBAR -->
 <div class="navbar">
     <div class="logo">Courier Admin</div>
     <div class="nav-buttons">
@@ -237,7 +263,6 @@ button.action{
 <div class="container">
 <h2 style="text-align:center;margin-bottom:20px;">Manage Customers</h2>
 
-<!-- SEARCH FORM -->
 <form method="GET" class="search-box">
 <input type="text" name="search" placeholder="Search by Name or ID..." value="<?= htmlspecialchars($search) ?>">
 <button type="submit">Search</button>

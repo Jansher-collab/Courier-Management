@@ -90,27 +90,28 @@ body,html{height:100%;width:100%;}
 body{display:flex;align-items:center;justify-content:center;background:#f0f2f5;}
 .container{display:flex;flex-wrap:wrap;width:100%;min-height:100vh;}
 
+/* LEFT PANEL */
 .left-panel{
-flex:1 1 500px;
+flex:1 1 400px;
 background:url('assets/login-page.avif') center/cover no-repeat;
 display:flex;align-items:center;justify-content:center;
 color:white;text-align:center;padding:5vw;
 position:relative;
+min-height:300px;
 }
-
 .left-panel::after{
 content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);
 }
-
 .left-panel > div{position:relative;z-index:2;}
-.left-panel h1{font-size:clamp(28px,4vw,48px);margin-bottom:15px;}
-.left-panel p{font-size:clamp(14px,1.3vw,20px);opacity:0.9;}
+.left-panel h1{font-size:clamp(24px,4vw,48px);margin-bottom:15px;}
+.left-panel p{font-size:clamp(12px,1.3vw,20px);opacity:0.9;}
 
+/* RIGHT PANEL */
 .right-panel{
-flex:1 1 400px;
+flex:1 1 350px;
 display:flex;align-items:center;justify-content:center;padding:5vw 3vw;
+min-width:280px;
 }
-
 .login-box{
 width:100%;max-width:420px;
 padding:clamp(20px,3vw,40px);
@@ -120,8 +121,6 @@ backdrop-filter:blur(15px);
 box-shadow:0 10px 30px rgba(0,0,0,0.25);
 animation:fadeIn 0.7s ease;
 }
-
-/* UPDATED HEADING STYLE */
 .login-box h2{
 text-align:center;
 margin-bottom:28px;
@@ -130,10 +129,7 @@ background:linear-gradient(135deg,#ff7e5f,#feb47b);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
-
-/* MORE SPACE BETWEEN INPUTS */
-.input-group{margin-bottom:22px;}
-
+.input-group{margin-bottom:18px;}
 input{
 width:100%;
 padding:14px;
@@ -144,9 +140,7 @@ font-size:clamp(14px,1vw,16px);
 background:rgba(255,255,255,0.95);
 transition:0.3s;
 }
-
 input:focus{box-shadow:0 0 10px rgba(255,126,95,0.6);}
-
 button{
 width:100%;
 padding:14px;
@@ -159,32 +153,38 @@ color:white;
 font-weight:bold;
 transition:0.4s;
 }
-
-button:hover{
-transform:translateY(-2px);
-box-shadow:0 6px 20px rgba(0,0,0,0.25);
-}
-
-.error{color:#ffd4d4;margin-bottom:15px;text-align:center;font-size:14px;}
-
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+.error{color: #dc5555;margin-bottom:15px;text-align:center;font-size:14px;}
 .register-link{text-align:center;margin-top:15px;}
+.register-link a{color:#ff7e5f;text-decoration:none;font-weight:bold;transition:0.3s;}
+.register-link a:hover{text-decoration:underline;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(15px);}to{opacity:1;transform:translateY(0);}}
 
-.register-link a{
-color:#ff7e5f;
-text-decoration:none;
-font-weight:bold;
-transition:0.3s;
+@media(max-width:1024px){
+.container{flex-direction:column;}
+.left-panel,.right-panel{flex:1 1 100%;min-width:100%;}
+.left-panel{min-height:250px;padding:4vw;}
+.right-panel{padding:4vw;}
+.login-box{padding:20px;}
 }
 
-.register-link a:hover{text-decoration:underline;}
+@media(max-width:768px){
+.left-panel h1{font-size:28px;}
+.left-panel p{font-size:14px;}
+.login-box{padding:18px;}
+input,button{padding:12px;font-size:14px;}
+}
 
-@keyframes fadeIn{
-from{opacity:0;transform:translateY(15px);}
-to{opacity:1;transform:translateY(0);}
+@media(max-width:480px){
+.left-panel{padding:3vw;min-height:200px;}
+.left-panel h1{font-size:22px;}
+.left-panel p{font-size:12px;}
+.right-panel{padding:3vw;}
+.login-box{padding:15px;}
+input,button{padding:10px;font-size:13px;}
 }
 </style>
 </head>
-
 <body>
 <div class="container">
     <div class="left-panel">
@@ -193,7 +193,6 @@ to{opacity:1;transform:translateY(0);}
             <p>Fast. Secure. Professional Delivery Platform.</p>
         </div>
     </div>
-
     <div class="right-panel">
         <div class="login-box">
             <h2>Login</h2>
@@ -207,16 +206,13 @@ to{opacity:1;transform:translateY(0);}
                 </div>
                 <button type="submit">Login Now</button>
             </form>
-
             <div class="register-link">
                 <p>Don't have a user account? <a href="user/register.php">User Register</a></p>
                 <p>Want to become an agent? <a href="agent/register.php">Apply as Agent</a></p>
             </div>
-
         </div>
     </div>
 </div>
-
 <script>
 function validateForm(){
     let email=document.getElementById("email").value;
@@ -227,6 +223,5 @@ function validateForm(){
     return true;
 }
 </script>
-
 </body>
 </html>

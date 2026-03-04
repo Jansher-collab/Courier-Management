@@ -23,19 +23,6 @@ $result = $conn->query($query);
 $couriers = [];
 while($row = $result->fetch_assoc()) $couriers[] = $row;
 
-$selected_courier_id = $_POST['courier_id'] ?? '';
-$to_email = '';
-$courier_id_val = '';
-
-if($selected_courier_id){
-    $stmt_c = $conn->prepare("SELECT r.email FROM couriers c JOIN customers r ON c.receiver_id = r.customer_id WHERE c.courier_id = ?");
-    $stmt_c->bind_param("i", $selected_courier_id);
-    $stmt_c->execute();
-    $courier_data = $stmt_c->get_result()->fetch_assoc();
-    $to_email = $courier_data['email'];
-    $courier_id_val = $selected_courier_id;
-}
-
 if(isset($_POST['send_email'])){
     $courier_id = $_POST['courier_id'] ?: null;
     $to = $_POST['to_email'];
@@ -59,29 +46,98 @@ if(isset($_POST['send_email'])){
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
-body{background:url('../assets/send-sms.jpg') center/cover no-repeat fixed;padding-top:80px;overflow-x:hidden;}
-body::-webkit-scrollbar{display:none;}
+html{scrollbar-width:none;} 
+html::-webkit-scrollbar{display:none;}
 
-.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;position:fixed;top:0;width:100%;}
-.logo{ color:#ff7e5f;font-size:1.5rem;font-weight:bold;}
-.nav-buttons{display:flex;gap:10px;}
-.btn{text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;color:white;}
-.dashboard{background:linear-gradient(135deg,#ffd200,#f7971e);}
-.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
-
-.container{
-width:95%;max-width:700px;margin:50px auto;background:rgba(255,255,255,0.15);backdrop-filter:blur(15px);border-radius:20px;padding:30px;color:#fff;
+body{
+background:url('../assets/send-sms.jpg') center/cover no-repeat fixed;
+overflow-x:hidden;
+padding-bottom:120px;
 }
 
-/* Success message style */
+/* NAVBAR */
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 30px;
+flex-wrap:wrap;
+}
+
+.logo{
+color:#ff7e5f;
+font-size:1.5rem;
+font-weight:bold;
+}
+
+.nav-buttons{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.btn{
+text-decoration:none;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+color:white;
+}
+
+.dashboard{
+background:linear-gradient(135deg,#ffd200,#f7971e);
+}
+
+.logout{
+background:linear-gradient(135deg,#ff7e5f,#feb47b);
+}
+
+/* MOBILE NAVBAR FIX */
+@media(max-width:768px){
+
+.navbar{
+flex-direction:column;
+align-items:center;
+}
+
+.logo{
+margin-bottom:10px;
+}
+
+.nav-buttons{
+width:100%;
+justify-content:center;
+}
+
+.btn{
+padding:10px 18px;
+}
+}
+
+/* CONTAINER */
+.container{
+width:95%;
+max-width:700px;
+margin:40px auto;
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(15px);
+border-radius:20px;
+padding:30px;
+color:#fff;
+}
+
+/* Success message */
 .success-msg{
-color:#00ff88;
+color:#28a745;
 font-weight:bold;
 margin-bottom:15px;
 }
 
-form{display:flex;flex-direction:column;gap:15px;}
+form{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
 
 input,textarea{
 padding:12px;
@@ -92,7 +148,6 @@ color:#000;
 transition:0.3s;
 }
 
-/* --- Glow up on focus --- */
 input:focus, textarea:focus{
 outline:none;
 box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
@@ -109,19 +164,23 @@ background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:#fff;
 transition:0.3s;
 }
-button:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,0,0,0.25);}
+
+button:hover{
+transform:translateY(-1px);
+box-shadow:0 4px 15px rgba(0,0,0,0.25);
+}
 
 /* Dropdown */
 .dropdown-wrapper{position:relative;}
+
 .dropdown-selected{
 padding:12px;
 border-radius:10px;
 background:#fff;
 color:#000;
 cursor:pointer;
-transition:0.3s;
 }
-/* Glow when clicked */
+
 .dropdown-selected.active{
 box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
 border:1px solid #ff7e5f;
@@ -136,15 +195,14 @@ background:#fff;
 border-radius:10px;
 display:none;
 z-index:100;
-scrollbar-width:none;
 }
-.dropdown-items::-webkit-scrollbar{display:none;}
 
 .dropdown-items div{
 padding:10px;
 cursor:pointer;
 color:#000;
 }
+
 .dropdown-items div:hover{
 background:#ff7e5f;
 color:#fff;
@@ -156,9 +214,8 @@ border:none;
 border-bottom:1px solid #ccc;
 outline:none;
 width:100%;
-transition:0.3s;
 }
-/* Glow on focus for search box */
+
 .search-box:focus{
 box-shadow:0 0 12px 3px rgba(255,126,95,0.7);
 border:1px solid #ff7e5f;
