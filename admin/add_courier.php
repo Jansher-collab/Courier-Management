@@ -60,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$customers = $conn->query("SELECT customer_id, name FROM customers");
-$agents = $conn->query("SELECT a.agent_id, u.name FROM agents a JOIN users u ON a.user_id=u.user_id");
+$users = $conn->query("SELECT user_id,name,email FROM users");
+$agents = $conn->query("SELECT a.agent_id,u.name,u.email FROM agents a JOIN users u ON a.user_id=u.user_id");
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +73,9 @@ $agents = $conn->query("SELECT a.agent_id, u.name FROM agents a JOIN users u ON 
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html, body{width:100%; overflow-x:hidden;}
+html, body{width:100%; overflow-x:hidden;/* Hide scrollbar but keep scroll */
+scrollbar-width:none;        /* Firefox */
+-ms-overflow-style:none; }
 
 body{
 background:url('../assets/admin-add-courier.jpg') center/cover no-repeat fixed;
@@ -92,7 +94,6 @@ background:rgba(0,0,0,0.35);
 z-index:-1;
 }
 
-/* NAVBAR */
 .navbar{
 width:100%;
 display:flex;
@@ -113,46 +114,17 @@ display:flex;
 gap:15px;
 }
 
-.dashboard, .logout{
+.dashboard,.logout{
 text-decoration:none;
 padding:10px 20px;
 border-radius:10px;
 font-weight:bold;
 color:white;
-white-space:nowrap;
 }
 
-.dashboard{
-background:linear-gradient(135deg,#ffd200,#f7971e);
-}
+.dashboard{background:linear-gradient(135deg,#ffd200,#f7971e);}
+.logout{background:linear-gradient(135deg,#ff7e5f,#feb47b);}
 
-.logout{
-background:linear-gradient(135deg,#ff7e5f,#feb47b);
-}
-
-/* MOBILE NAVBAR CENTER FIX */
-@media(max-width:768px){
-.navbar{
-flex-direction:column;
-align-items:center;
-gap:15px;
-}
-
-.nav-right{
-width:100%;
-display:flex;
-justify-content:center;
-gap:12px;
-flex-wrap:wrap;
-}
-
-.dashboard, .logout{
-padding:8px 18px;
-font-size:0.9rem;
-}
-}
-
-/* CONTAINER */
 .container{
 width:90%;
 max-width:600px;
@@ -168,7 +140,7 @@ h2{text-align:center;margin-bottom:15px;}
 
 label{display:block;margin:8px 0 5px;font-weight:600;}
 
-input, button, .custom-dropdown-btn{
+input,button,.custom-dropdown-btn{
 width:100%;
 padding:12px;
 border-radius:8px;
@@ -178,6 +150,20 @@ font-size:1rem;
 background:#fff;
 color:#000;
 outline:none;
+transition:all .25s ease;
+}
+
+/* Glow hover effect */
+input:hover,
+.custom-dropdown-btn:hover{
+box-shadow:0 0 10px rgba(255,255,255,0.6),
+           0 0 20px rgba(255,126,95,0.6);
+transform:translateY(-1px);
+}
+
+input:focus{
+box-shadow:0 0 10px rgba(255,255,255,0.7),
+           0 0 25px rgba(255,126,95,0.9);
 }
 
 button{
@@ -185,20 +171,63 @@ cursor:pointer;
 background:linear-gradient(135deg,#ff7e5f,#feb47b);
 color:white;
 font-weight:bold;
-}
 
-button:hover{
-transform:translateY(-1px);
-}
-
-@media(max-width:600px){
-.container{padding:15px;}
-input, button, .custom-dropdown-btn{font-size:0.9rem;padding:10px;}
+width:auto;
+display:block;
+margin:15px auto;   /* centers the button */
+padding:12px 22px;
 }
 
 p.success{color:#28a745;text-align:center;margin-bottom:12px;font-weight:700;}
 p.error{color:#ffd4d4;text-align:center;margin-bottom:12px;font-weight:700;}
 
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.modal-content{
+background:white;
+width:90%;
+max-width:500px;
+padding:20px;
+border-radius:10px;
+color:#000;
+}
+
+#searchUser{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.list{
+max-height:300px;
+overflow-y:auto;
+}
+
+/* hidden scrollbar but still scrollable */
+.list::-webkit-scrollbar{width:0px;}
+
+.user-item{
+padding:10px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+}
+
+.user-item:hover{
+background:#f3f3f3;
+}
 </style>
 </head>
 
@@ -221,10 +250,14 @@ p.error{color:#ffd4d4;text-align:center;margin-bottom:12px;font-weight:700;}
 <form method="POST">
 
 <label>Sender:</label>
-<input type="text" name="sender_id" required>
+<input type="hidden" name="sender_id" id="sender_id" required>
+<button type="button" class="custom-dropdown-btn" onclick="openModal('sender')">Select Sender</button>
+<div id="sender_display"></div>
 
 <label>Receiver:</label>
-<input type="text" name="receiver_id" required>
+<input type="hidden" name="receiver_id" id="receiver_id" required>
+<button type="button" class="custom-dropdown-btn" onclick="openModal('receiver')">Select Receiver</button>
+<div id="receiver_display"></div>
 
 <label>From City:</label>
 <input type="text" name="from_location" required>
@@ -239,12 +272,116 @@ p.error{color:#ffd4d4;text-align:center;margin-bottom:12px;font-weight:700;}
 <input type="date" name="delivery_date" required>
 
 <label>Assign Agent:</label>
-<input type="text" name="agent_id" required>
+<input type="hidden" name="agent_id" id="agent_id" required>
+<button type="button" class="custom-dropdown-btn" onclick="openModal('agent')">Select Agent</button>
+<div id="agent_display"></div>
 
 <button type="submit">Add Courier</button>
 
 </form>
 </div>
+
+<div id="userModal" class="modal">
+<div class="modal-content" onmouseleave="closeModal()">
+
+<input type="text" id="searchUser" placeholder="Search by name, email or id" onkeyup="searchUser()">
+
+<div class="list">
+
+<?php
+$users->data_seek(0);
+while($u=$users->fetch_assoc()){
+echo "<div class='user-item user'
+data-id='{$u['user_id']}'
+data-name='".strtolower($u['name'])."'
+data-email='".strtolower($u['email'])."'
+onclick=\"selectUser('{$u['user_id']}','{$u['name']}','{$u['email']}')\">
+<b>{$u['name']}</b><br>{$u['email']}<br>ID: {$u['user_id']}
+</div>";
+}
+
+while($a=$agents->fetch_assoc()){
+echo "<div class='user-item agent'
+data-id='{$a['agent_id']}'
+data-name='".strtolower($a['name'])."'
+data-email='".strtolower($a['email'])."'
+onclick=\"selectAgent('{$a['agent_id']}','{$a['name']}','{$a['email']}')\">
+<b>{$a['name']}</b><br>{$a['email']}<br>Agent ID: {$a['agent_id']}
+</div>";
+}
+?>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let currentType="";
+
+function openModal(type){
+currentType=type;
+document.getElementById("userModal").style.display="flex";
+
+document.querySelectorAll(".user").forEach(el=>{
+el.style.display=(type==="sender"||type==="receiver")?"block":"none";
+});
+
+document.querySelectorAll(".agent").forEach(el=>{
+el.style.display=(type==="agent")?"block":"none";
+});
+}
+
+function closeModal(){
+document.getElementById("userModal").style.display="none";
+document.getElementById("searchUser").value="";
+document.querySelectorAll(".user-item").forEach(row=>{
+row.style.display="block";
+});
+}
+
+function selectUser(id,name,email){
+
+if(currentType==="sender"){
+document.getElementById("sender_id").value=id;
+document.getElementById("sender_display").innerHTML=name+" ("+email+")";
+}
+
+if(currentType==="receiver"){
+document.getElementById("receiver_id").value=id;
+document.getElementById("receiver_display").innerHTML=name+" ("+email+")";
+}
+
+closeModal();
+}
+
+function selectAgent(id,name,email){
+document.getElementById("agent_id").value=id;
+document.getElementById("agent_display").innerHTML=name+" ("+email+")";
+closeModal();
+}
+
+function searchUser(){
+
+let input=document.getElementById("searchUser").value.toLowerCase();
+let rows=document.querySelectorAll(".user-item");
+
+rows.forEach(row=>{
+let name=row.dataset.name;
+let email=row.dataset.email;
+let id=row.dataset.id;
+
+if(name.includes(input)||email.includes(input)||id.includes(input)){
+row.style.display="block";
+}else{
+row.style.display="none";
+}
+});
+
+}
+
+</script>
 
 </body>
 </html>
