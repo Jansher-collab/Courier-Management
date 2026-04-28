@@ -2,7 +2,7 @@
 $host = "localhost";        // Replace with your local DB host, e.g., 'localhost'
 $user = "root";        // Replace with your MySQL username
 $password = "";    // Replace with your MySQL password
-$dbname = "courier_management";      // Replace with your database name
+$dbname = "courier-management";      // Replace with your database name
 $conn = new mysqli($host, $user, $password, $dbname);
 if ($conn->connect_errno) {
     die("Database connection failed: " . $conn->connect_error);
